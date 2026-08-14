@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Public\CatalogController;
+use App\Http\Controllers\Public\ItineraryController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'home')->name('home');
@@ -87,19 +88,27 @@ $catalogs = [
 ];
 
 foreach ($catalogs as $routePrefix => $catalog) {
-    Route::view('/'.$catalog['uri'], 'pages.catalog', [
+    Route::view('/' . $catalog['uri'], 'pages.catalog', [
         ...$catalog,
         'routePrefix' => $routePrefix,
-    ])->name($routePrefix.'.index');
+    ])->name($routePrefix . '.index');
 
-    Route::get('/'.$catalog['uri'].'/{slug}', [CatalogController::class, 'show'])
+    Route::get('/' . $catalog['uri'] . '/{slug}', [CatalogController::class, 'show'])
         ->defaults('catalog', $catalog)
         ->defaults('routePrefix', $routePrefix)
-        ->name($routePrefix.'.show');
+        ->name($routePrefix . '.show');
 }
 
 Route::view('/mapa-da-cidade', 'pages.map')->name('city-map');
-Route::view('/criar-rota', 'pages.route-builder')->name('routes.create');
+Route::get('/criar-rota', [ItineraryController::class, 'create'])
+    ->name('routes.create');
+
+Route::post('/criar-rota', [ItineraryController::class, 'store'])
+    ->name('routes.store');
+Route::get(
+    '/minha-rota/{itinerary}',
+    [ItineraryController::class, 'show']
+)->name('routes.show');
 Route::view('/entrar', 'pages.login')->name('login');
 
 $institutionalPages = [
@@ -130,6 +139,6 @@ Route::middleware(['auth', 'can:access-admin-panel'])->prefix('gestor')->name('a
     ];
 
     foreach ($modules as $name => $title) {
-        Route::view('/'.$name, 'admin.module', compact('title'))->name($name.'.index');
+        Route::view('/' . $name, 'admin.module', compact('title'))->name($name . '.index');
     }
 });

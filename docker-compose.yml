@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres-rota-viva
+    restart: always
+    environment:
+      POSTGRES_USER: rota-viva
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - rotaviva-net
+
+volumes:
+  pgdata:
+
+networks:
+  rotaviva-net:
+    driver: bridge
