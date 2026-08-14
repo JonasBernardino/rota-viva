@@ -14,6 +14,11 @@ class HomePageTest extends TestCase
             ->assertOk()
             ->assertSee('Como você quer')
             ->assertSee('Criar minha rota')
-            ->assertSee('Descubra no seu ritmo');
+            ->assertSee('Descubra no seu ritmo')
+            ->assertSee('Lugares que')
+            ->assertSee('Uma rota que')
+            ->assertSee('Informação para visitar com confiança')
+            ->assertSee('Cada rota também')
+            ->assertSee('Sua próxima');
     }
 }

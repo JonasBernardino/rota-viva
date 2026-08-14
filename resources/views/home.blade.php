@@ -152,13 +152,220 @@
                         <span class="discovery-item__label">Gastronomia</span>
                         <span class="discovery-item__arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="discovery-item" href="#familias">
+                    <a class="discovery-item" href="#economia-local">
                         <span class="discovery-item__number">04</span>
                         <span class="discovery-item__label">Para famílias</span>
                         <span class="discovery-item__arrow" aria-hidden="true">→</span>
                     </a>
                 </div>
             </section>
+
+            <section class="territory-highlights page-container" id="atrativos" aria-labelledby="highlights-title">
+                <div class="highlights-heading">
+                    <div>
+                        <p class="eyebrow">Destaques do território</p>
+                        <h2 id="highlights-title">Lugares que<br>revelam a cidade</h2>
+                    </div>
+                    <a class="text-link" href="#todos-atrativos">Ver todos os atrativos <span aria-hidden="true">→</span></a>
+                </div>
+
+                <div class="places-grid">
+                    <article class="place-card place-card--culture" id="cultura">
+                        <img src="{{ asset('images/cultural-center.webp') }}" alt="Centro cultural instalado em construção histórica com portas verdes">
+                        <a class="place-card__content" href="#centro-cultural">
+                            <span>
+                                <strong>Centro de Cultura e Memória</strong>
+                                <small>Cultura e história&nbsp;&nbsp;·&nbsp;&nbsp;1h</small>
+                            </span>
+                            <span class="place-card__arrow" aria-hidden="true">→</span>
+                        </a>
+                    </article>
+
+                    <article class="place-card place-card--market" id="gastronomia">
+                        <img src="{{ asset('images/local-market.webp') }}" alt="Mesa de mercado com alimentos, cerâmicas e sabores locais">
+                        <a class="place-card__content" href="#mercado-local">
+                            <span>
+                                <strong>Mercado de Sabores Locais</strong>
+                                <small>Gastronomia&nbsp;&nbsp;·&nbsp;&nbsp;1h30</small>
+                            </span>
+                            <span class="place-card__arrow" aria-hidden="true">→</span>
+                        </a>
+                    </article>
+
+                    <article class="place-card place-card--viewpoint" id="natureza">
+                        <img src="{{ asset('images/rota-viva-hero.webp') }}" alt="Vista do mar e das montanhas a partir de um mirante arborizado">
+                        <a class="place-card__content" href="#mirante">
+                            <span>
+                                <strong>Mirante do Encontro</strong>
+                                <small>Natureza&nbsp;&nbsp;·&nbsp;&nbsp;45 min</small>
+                            </span>
+                            <span class="place-card__arrow" aria-hidden="true">→</span>
+                        </a>
+                    </article>
+                </div>
+
+                <p class="municipal-validation">
+                    <span aria-hidden="true">✓</span>
+                    Informação validada pelo município
+                </p>
+            </section>
+
+            <section class="adaptive-route" id="rota-adaptativa" aria-labelledby="adaptive-title">
+                <div class="page-container adaptive-route__grid">
+                    <div class="adaptive-route__copy">
+                        <p class="eyebrow">Rota adaptativa</p>
+                        <h2 id="adaptive-title">Uma rota que<br>acompanha a vida real</h2>
+                        <p>Tempo, orçamento, companhia e acessibilidade orientam cada escolha. Se algo mudar, sua experiência também muda.</p>
+
+                        <ol class="adaptive-steps">
+                            <li><span>01</span><strong>Conte como quer viver a cidade</strong></li>
+                            <li><span>02</span><strong>Receba uma experiência pensada para você</strong></li>
+                            <li><span>03</span><strong>Se algo mudar, sua rota também muda</strong></li>
+                        </ol>
+                    </div>
+
+                    <div class="route-map" aria-label="Exemplo visual de uma rota adaptada após o início da chuva">
+                        <img src="{{ asset('images/rota-viva-hero.webp') }}" alt="">
+                        <div class="route-map__shade"></div>
+                        <svg class="route-map__path" aria-hidden="true" viewBox="0 0 620 440" preserveAspectRatio="none">
+                            <path class="route-map__old" d="M145 48 C120 95 145 134 220 160 C280 182 315 235 265 276 C235 302 260 355 340 390"></path>
+                            <path class="route-map__new" d="M145 48 C120 95 145 134 220 160 C250 177 246 222 226 255 C205 290 255 335 340 390"></path>
+                            <circle cx="145" cy="48" r="7"></circle>
+                            <circle cx="220" cy="160" r="7"></circle>
+                            <circle cx="340" cy="390" r="7"></circle>
+                        </svg>
+
+                        <span class="route-point route-point--one">Centro de Cultura<br>e Memória · 1h</span>
+                        <span class="route-point route-point--two">Mercado de<br>Sabores Locais · 1h30</span>
+                        <span class="route-point route-point--three">Praça da Matriz<br>· 1h30</span>
+
+                        <div class="route-summary">
+                            <span>◷&nbsp;&nbsp;4 horas</span>
+                            <span>R$&nbsp;&nbsp;135 estimados</span>
+                        </div>
+
+                        <div class="rain-card">
+                            <strong>☂&nbsp;&nbsp;Começou a chover</strong>
+                            <p>Mirante substituído por experiência cultural coberta</p>
+                            <div><span class="rain-card__old"></span>Rota anterior</div>
+                            <div><span class="rain-card__new"></span>Nova rota</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="confidence-section" id="confianca" aria-labelledby="confidence-title">
+                <div class="page-container">
+                    <div class="confidence-heading">
+                        <div>
+                            <h2 id="confidence-title">Informação para visitar com confiança</h2>
+                            <p>Conteúdo organizado e mantido em parceria com a gestão municipal.</p>
+                        </div>
+                        <div class="municipal-mark" aria-label="Gestão municipal">
+                            <span aria-hidden="true">◇</span>
+                            <small>Gestão<br>Municipal</small>
+                        </div>
+                    </div>
+
+                    <div class="confidence-grid">
+                        <article>
+                            <svg aria-hidden="true" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"></circle><path d="M20 10v11l8 5"></path></svg>
+                            <h3>Horários<br>atualizados</h3>
+                            <p>Informações sempre conferidas para você planejar sem imprevistos.</p>
+                        </article>
+                        <article>
+                            <svg aria-hidden="true" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"></circle><circle cx="20" cy="11" r="2"></circle><path d="M10 16h20M20 16v15M14 31l6-10 6 10"></path></svg>
+                            <h3>Acessibilidade<br>detalhada</h3>
+                            <p>Caminhos, recursos e apoios descritos com clareza e responsabilidade.</p>
+                        </article>
+                        <article>
+                            <svg aria-hidden="true" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"></circle><path d="M20 10v20M25 14c-2-3-10-3-10 2 0 6 11 2 11 8 0 5-8 6-12 2"></path></svg>
+                            <h3>Custos e<br>duração</h3>
+                            <p>Estimativas de tempo e custo para você fazer escolhas conscientes.</p>
+                        </article>
+                        <article>
+                            <svg aria-hidden="true" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"></circle><path d="M26 16c0 6-6 12-6 12s-6-6-6-12a6 6 0 1 1 12 0Z"></path><circle cx="20" cy="16" r="2"></circle></svg>
+                            <h3>Orientações<br>locais</h3>
+                            <p>Regras, cuidados e dicas do território reunidos em um só lugar.</p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="local-economy" id="economia-local" aria-labelledby="economy-title">
+                <div class="local-economy__copy">
+                    <div>
+                        <p class="eyebrow">Economia local</p>
+                        <h2 id="economy-title">Cada rota também<br>movimenta o território</h2>
+                        <p>Pequenos negócios, experiências culturais e lugares menos conhecidos passam a fazer parte do percurso de forma relevante — nunca como publicidade invasiva.</p>
+                        <p class="local-opportunities"><span aria-hidden="true">♧</span> + oportunidades locais no caminho</p>
+                        <a class="text-link" href="#quem-faz">Conheça quem faz a cidade <span aria-hidden="true">→</span></a>
+                    </div>
+                </div>
+                <div class="local-economy__image">
+                    <img src="{{ asset('images/local-artisan.webp') }}" alt="Artesã local sorrindo enquanto modela uma peça de cerâmica">
+                </div>
+            </section>
+
+            <section class="final-cta" id="comece-agora" aria-labelledby="final-cta-title">
+                <img src="{{ asset('images/rota-viva-hero.webp') }}" alt="Vista panorâmica de uma cidade histórica à beira-mar">
+                <div class="page-container final-cta__content">
+                    <div class="final-cta__panel">
+                        <h2 id="final-cta-title">Sua próxima<br>experiência começa aqui</h2>
+                        <p>Diga quanto tempo você tem e como deseja viver a cidade. O Rota Viva cuida do percurso.</p>
+                        <a class="final-cta__button" href="#hero-title">Criar minha rota <span aria-hidden="true">→</span></a>
+                        <a class="final-cta__secondary" href="#atrativos">Explorar sem roteiro</a>
+                    </div>
+                </div>
+            </section>
         </main>
+
+        <footer class="site-footer" id="contato">
+            <div class="page-container">
+                <div class="site-footer__grid">
+                    <div class="site-footer__brand">
+                        <a class="brand brand--light" href="{{ route('home') }}">ROTA VIVA</a>
+                        <p>Turismo inteligente para<br>territórios vivos.</p>
+                        <div class="social-links" aria-label="Redes sociais">
+                            <a href="#instagram" aria-label="Instagram">◎</a>
+                            <a href="#facebook" aria-label="Facebook">f</a>
+                            <a href="#youtube" aria-label="YouTube">▶</a>
+                            <a href="#email" aria-label="E-mail">✉</a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2>Descubra</h2>
+                        <a href="#atrativos">Atrativos</a>
+                        <a href="#experiencias">Experiências</a>
+                        <a href="#agenda">Agenda</a>
+                    </div>
+                    <div>
+                        <h2>Planeje</h2>
+                        <a href="#hero-title">Criar rota</a>
+                        <a href="#onde-ficar">Onde ficar</a>
+                        <a href="#onde-comer">Onde comer</a>
+                    </div>
+                    <div>
+                        <h2>Institucional</h2>
+                        <a href="#sobre">Sobre o projeto</a>
+                        <a href="#gestor">Área do gestor</a>
+                        <a href="#contato">Contato</a>
+                    </div>
+                    <div>
+                        <h2>Acessibilidade</h2>
+                        <a href="#recursos">Recursos</a>
+                        <a href="#declaracao">Declaração</a>
+                        <a href="#ajuda">Ajuda</a>
+                    </div>
+                </div>
+
+                <div class="site-footer__bottom">
+                    <span>♢&nbsp;&nbsp;Informações oficiais do município</span>
+                    <span>Privacidade&nbsp;&nbsp;·&nbsp;&nbsp;Termos de uso</span>
+                    <span>◉&nbsp;&nbsp;PT⌄</span>
+                </div>
+            </div>
+        </footer>
     </body>
 </html>
