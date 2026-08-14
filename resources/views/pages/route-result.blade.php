@@ -6,151 +6,135 @@
 
 @section('content')
 
-<section class="page-hero page-hero--compact">
-    <div class="page-container page-hero__content">
+    <section class="page-hero page-hero--compact">
+        <div class="page-container page-hero__content">
 
-        <p class="eyebrow">
-            Sua rota
-        </p>
+            <p class="eyebrow">
+                Sua rota
+            </p>
 
-        <h1>
-            {{ $itinerary->title }}
-        </h1>
+            <h1>
+                {{ $itinerary->title }}
+            </h1>
 
-        <p>
-            {{ $itinerary->summary }}
-        </p>
+            <p>
+                {{ $itinerary->summary }}
+            </p>
 
-        <div class="route-result-summary">
+            <div class="route-result-summary">
 
-            <span>
-                ◷
-                {{ $itinerary->total_duration_minutes }}
-                minutos
-            </span>
+                <span>
+                    ◷
+                    {{ $itinerary->total_duration_minutes }}
+                    minutos
+                </span>
 
-            <span>
-                R$
-                {{ number_format(
-                    $itinerary->total_estimated_cost,
-                    2,
-                    ',',
-                    '.'
-                ) }}
-            </span>
+                <span>
+                    R$
+                    {{ number_format($itinerary->total_estimated_cost, 2, ',', '.') }}
+                </span>
 
-            <span>
-                {{ $itinerary->items->count() }}
-                paradas
-            </span>
+                <span>
+                    {{ $itinerary->items->count() }}
+                    paradas
+                </span>
+
+            </div>
 
         </div>
+    </section>
 
-    </div>
-</section>
+    <section class="page-section">
 
-<section class="page-section">
+        <div class="page-container">
 
-    <div class="page-container">
+            <div class="route-result-layout">
 
-        <div class="route-result-layout">
+                <div class="route-timeline">
 
-            <div class="route-timeline">
+                    @foreach ($itinerary->items as $item)
+                        <article class="route-stop">
 
-                @foreach($itinerary->items as $item)
+                            <div class="route-stop__number">
+                                {{ str_pad($item->position, 2, '0', STR_PAD_LEFT) }}
+                            </div>
 
-                    <article class="route-stop">
+                            <div class="route-stop__content">
 
-                        <div class="route-stop__number">
-                            {{ str_pad(
-                                $item->position,
-                                2,
-                                '0',
-                                STR_PAD_LEFT
-                            ) }}
-                        </div>
+                                <p class="eyebrow">
+                                    {{ $item->place->category->name }}
+                                </p>
 
-                        <div class="route-stop__content">
+                                <h2>
+                                    {{ $item->place->name }}
+                                </h2>
 
-                            <p class="eyebrow">
-                                {{ $item->place->category->name }}
-                            </p>
+                                <div class="route-stop__meta">
 
-                            <h2>
-                                {{ $item->place->name }}
-                            </h2>
+                                    <span>
+                                        ◷
+                                        {{ $item->duration_minutes }}
+                                        min
+                                    </span>
 
-                            <div class="route-stop__meta">
+                                    <span>
+                                        R$
+                                        {{ number_format($item->estimated_cost, 2, ',', '.') }}
+                                    </span>
 
-                                <span>
-                                    ◷
-                                    {{ $item->duration_minutes }}
-                                    min
-                                </span>
+                                </div>
 
-                                <span>
-                                    R$
-                                    {{ number_format(
-                                        $item->estimated_cost,
-                                        2,
-                                        ',',
-                                        '.'
-                                    ) }}
-                                </span>
+                                <p>
+                                    {{ $item->reason }}
+                                </p>
 
                             </div>
 
-                            <p>
-                                {{ $item->reason }}
-                            </p>
+                        </article>
+                    @endforeach
 
-                        </div>
-
-                    </article>
-
-                @endforeach
-
-            </div>
-
-            <aside class="route-result-map">
-
-                <div id="route-map">
-                    {{-- Leaflet entra aqui depois --}}
                 </div>
 
-            </aside>
+                <aside class="route-result-map">
 
-        </div>
+                    <div id="route-map">
+                        {{-- Leaflet entra aqui depois --}}
+                    </div>
 
-        <div class="route-adaptation-callout">
+                </aside>
 
-            <div>
-                <p class="eyebrow">
-                    Rota adaptativa
-                </p>
-
-                <h2>
-                    Sua realidade mudou?
-                </h2>
-
-                <p>
-                    Se começou a chover ou algo mudou
-                    durante o percurso, podemos adaptar
-                    somente o necessário.
-                </p>
             </div>
 
-            <button
-                class="route-cta"
-                type="button"
-            >
-                ☂ Começou a chover
-            </button>
+            <div class="route-adaptation-callout">
+
+                <div>
+                    <p class="eyebrow">
+                        Rota adaptativa
+                    </p>
+
+                    <h2>
+                        Sua realidade mudou?
+                    </h2>
+
+                    <p>
+                        Se começou a chover ou algo mudou
+                        durante o percurso, podemos adaptar
+                        somente o necessário.
+                    </p>
+                </div>
+
+                <form action="{{ route('routes.adapt.rain', $itinerary) }}" method="post">
+                    @csrf
+
+                    <button class="route-cta" type="submit">
+                        ☂ Começou a chover
+                    </button>
+                </form>
+
+            </div>
 
         </div>
 
-    </div>
-
-</section>
+    </section>
 
 @endsection

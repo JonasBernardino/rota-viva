@@ -3,6 +3,7 @@
 use App\Http\Controllers\Public\CatalogController;
 use App\Http\Controllers\Public\ItineraryController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Public\AdaptationController;
 
 Route::view('/', 'home')->name('home');
 
@@ -109,6 +110,15 @@ Route::get(
     '/minha-rota/{itinerary}',
     [ItineraryController::class, 'show']
 )->name('routes.show');
+Route::post(
+    '/minha-rota/{itinerary}/adaptar/chuva',
+    [AdaptationController::class, 'rain']
+)->name('routes.adapt.rain');
+
+Route::get(
+    '/minha-rota/{itinerary}/adaptacoes/{adaptation}',
+    [AdaptationController::class, 'show']
+)->name('routes.adaptation.show');
 Route::view('/entrar', 'pages.login')->name('login');
 
 $institutionalPages = [
