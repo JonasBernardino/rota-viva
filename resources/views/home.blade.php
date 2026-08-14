@@ -52,24 +52,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="main-navigation">
-                    <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a class="nav-link" href="#descubra">Descubra</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#experiencias">Experiências</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#agenda">Agenda</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#onde-ficar">Onde ficar</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#onde-comer">Onde comer</a></li>
-                    </ul>
-
-                    @auth
-                        @can('access-admin-panel')
-                            <a class="manager-link" href="#gestor">
-                                <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21v-2a7 7 0 0 1 14 0v2Z"></path></svg>
-                                <span>Área do gestor</span>
-                            </a>
-                        @endcan
-                    @endauth
-                </div>
+                @include('partials.public-navigation')
             </nav>
         </header>
 
@@ -81,7 +64,7 @@
                         <h1 id="hero-title">Como você quer<br>viver a cidade hoje?</h1>
                         <p class="hero__description">Conte o que você procura e receba uma experiência que se adapta ao seu tempo, orçamento e interesses.</p>
 
-                        <form class="route-search" action="#descubra" method="get">
+                        <form class="route-search" action="{{ route('routes.create') }}" method="get">
                             <label class="visually-hidden" for="route-query">Descreva a experiência que deseja</label>
                             <div class="route-search__field">
                                 <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.7 9.7 0 0 1-4-.8L3 21l1.5-4.2A8.5 8.5 0 1 1 21 11.5Z"></path></svg>
@@ -141,22 +124,22 @@
                 </div>
 
                 <div class="discovery-grid" id="experiencias">
-                    <a class="discovery-item" href="#cultura">
+                    <a class="discovery-item" href="{{ route('culture.index') }}">
                         <span class="discovery-item__number">01</span>
                         <span class="discovery-item__label">Cultura e história</span>
                         <span class="discovery-item__arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="discovery-item" href="#natureza">
+                    <a class="discovery-item" href="{{ route('tourist-spots.index') }}">
                         <span class="discovery-item__number">02</span>
                         <span class="discovery-item__label">Natureza</span>
                         <span class="discovery-item__arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="discovery-item" href="#gastronomia">
+                    <a class="discovery-item" href="{{ route('dining.index') }}">
                         <span class="discovery-item__number">03</span>
                         <span class="discovery-item__label">Gastronomia</span>
                         <span class="discovery-item__arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="discovery-item" href="#economia-local">
+                    <a class="discovery-item" href="{{ route('tours.index') }}">
                         <span class="discovery-item__number">04</span>
                         <span class="discovery-item__label">Para famílias</span>
                         <span class="discovery-item__arrow" aria-hidden="true">→</span>
@@ -170,13 +153,13 @@
                         <p class="eyebrow">Destaques do território</p>
                         <h2 id="highlights-title">Lugares que<br>revelam a cidade</h2>
                     </div>
-                    <a class="text-link" href="#todos-atrativos">Ver todos os atrativos <span aria-hidden="true">→</span></a>
+                    <a class="text-link" href="{{ route('tourist-spots.index') }}">Ver todos os atrativos <span aria-hidden="true">→</span></a>
                 </div>
 
                 <div class="places-grid">
                     <article class="place-card place-card--culture" id="cultura">
                         <img src="{{ asset('images/cultural-center.webp') }}" alt="Centro cultural instalado em construção histórica com portas verdes">
-                        <a class="place-card__content" href="#centro-cultural">
+                        <a class="place-card__content" href="{{ route('tourist-spots.show', 'centro-de-cultura-e-memoria') }}">
                             <span>
                                 <strong>Centro de Cultura e Memória</strong>
                                 <small>Cultura e história&nbsp;&nbsp;·&nbsp;&nbsp;1h</small>
@@ -187,7 +170,7 @@
 
                     <article class="place-card place-card--market" id="gastronomia">
                         <img src="{{ asset('images/local-market.webp') }}" alt="Mesa de mercado com alimentos, cerâmicas e sabores locais">
-                        <a class="place-card__content" href="#mercado-local">
+                        <a class="place-card__content" href="{{ route('dining.show', 'mercado-de-sabores-locais') }}">
                             <span>
                                 <strong>Mercado de Sabores Locais</strong>
                                 <small>Gastronomia&nbsp;&nbsp;·&nbsp;&nbsp;1h30</small>
@@ -198,7 +181,7 @@
 
                     <article class="place-card place-card--viewpoint" id="natureza">
                         <img src="{{ asset('images/rota-viva-hero.webp') }}" alt="Vista do mar e das montanhas a partir de um mirante arborizado">
-                        <a class="place-card__content" href="#mirante">
+                        <a class="place-card__content" href="{{ route('tourist-spots.show', 'mirante-do-encontro') }}">
                             <span>
                                 <strong>Mirante do Encontro</strong>
                                 <small>Natureza&nbsp;&nbsp;·&nbsp;&nbsp;45 min</small>
@@ -303,7 +286,7 @@
                         <h2 id="economy-title">Cada rota também<br>movimenta o território</h2>
                         <p>Pequenos negócios, experiências culturais e lugares menos conhecidos passam a fazer parte do percurso de forma relevante — nunca como publicidade invasiva.</p>
                         <p class="local-opportunities"><span aria-hidden="true">♧</span> + oportunidades locais no caminho</p>
-                        <a class="text-link" href="#quem-faz">Conheça quem faz a cidade <span aria-hidden="true">→</span></a>
+                        <a class="text-link" href="{{ route('guides.index') }}">Conheça quem faz a cidade <span aria-hidden="true">→</span></a>
                     </div>
                 </div>
                 <div class="local-economy__image">
@@ -317,8 +300,8 @@
                     <div class="final-cta__panel">
                         <h2 id="final-cta-title">Sua próxima<br>experiência começa aqui</h2>
                         <p>Diga quanto tempo você tem e como deseja viver a cidade. O Rota Viva cuida do percurso.</p>
-                        <a class="final-cta__button" href="#hero-title">Criar minha rota <span aria-hidden="true">→</span></a>
-                        <a class="final-cta__secondary" href="#atrativos">Explorar sem roteiro</a>
+                        <a class="final-cta__button" href="{{ route('routes.create') }}">Criar minha rota <span aria-hidden="true">→</span></a>
+                        <a class="final-cta__secondary" href="{{ route('tourist-spots.index') }}">Explorar sem roteiro</a>
                     </div>
                 </div>
             </section>
@@ -340,37 +323,37 @@
 
                     <div>
                         <h2>Descubra</h2>
-                        <a href="#atrativos">Atrativos</a>
-                        <a href="#experiencias">Experiências</a>
-                        <a href="#agenda">Agenda</a>
+                        <a href="{{ route('tourist-spots.index') }}">Pontos turísticos</a>
+                        <a href="{{ route('experiences') }}">Experiências</a>
+                        <a href="{{ route('agenda.index') }}">Agenda</a>
                     </div>
                     <div>
                         <h2>Planeje</h2>
-                        <a href="#hero-title">Criar rota</a>
-                        <a href="#onde-ficar">Onde ficar</a>
-                        <a href="#onde-comer">Onde comer</a>
+                        <a href="{{ route('routes.create') }}">Criar rota</a>
+                        <a href="{{ route('stays.index') }}">Onde ficar</a>
+                        <a href="{{ route('dining.index') }}">Onde comer</a>
                     </div>
                     <div>
                         <h2>Institucional</h2>
-                        <a href="#sobre">Sobre o projeto</a>
+                        <a href="{{ route('about') }}">Sobre o projeto</a>
                         @auth
                             @can('access-admin-panel')
-                                <a href="#gestor">Área do gestor</a>
+                                <a href="{{ route('admin.dashboard') }}">Área do gestor</a>
                             @endcan
                         @endauth
-                        <a href="#contato">Contato</a>
+                        <a href="{{ route('contact') }}">Contato</a>
                     </div>
                     <div>
                         <h2>Acessibilidade</h2>
-                        <a href="#recursos">Recursos</a>
-                        <a href="#declaracao">Declaração</a>
-                        <a href="#ajuda">Ajuda</a>
+                        <a href="{{ route('accessibility.resources') }}">Recursos</a>
+                        <a href="{{ route('accessibility.statement') }}">Declaração</a>
+                        <a href="{{ route('help') }}">Ajuda</a>
                     </div>
                 </div>
 
                 <div class="site-footer__bottom">
                     <span>♢&nbsp;&nbsp;Informações oficiais do município</span>
-                    <span>Privacidade&nbsp;&nbsp;·&nbsp;&nbsp;Termos de uso</span>
+                    <span><a href="{{ route('privacy') }}">Privacidade</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="{{ route('terms') }}">Termos de uso</a></span>
                     <span>◉&nbsp;&nbsp;PT⌄</span>
                 </div>
             </div>
