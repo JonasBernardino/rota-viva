@@ -61,10 +61,14 @@
                         <li class="nav-item"><a class="nav-link" href="#onde-comer">Onde comer</a></li>
                     </ul>
 
-                    <a class="manager-link" href="#gestor">
-                        <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21v-2a7 7 0 0 1 14 0v2Z"></path></svg>
-                        <span>Área do gestor</span>
-                    </a>
+                    @auth
+                        @can('access-admin-panel')
+                            <a class="manager-link" href="#gestor">
+                                <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21v-2a7 7 0 0 1 14 0v2Z"></path></svg>
+                                <span>Área do gestor</span>
+                            </a>
+                        @endcan
+                    @endauth
                 </div>
             </nav>
         </header>
@@ -349,7 +353,11 @@
                     <div>
                         <h2>Institucional</h2>
                         <a href="#sobre">Sobre o projeto</a>
-                        <a href="#gestor">Área do gestor</a>
+                        @auth
+                            @can('access-admin-panel')
+                                <a href="#gestor">Área do gestor</a>
+                            @endcan
+                        @endauth
                         <a href="#contato">Contato</a>
                     </div>
                     <div>
