@@ -79,6 +79,19 @@ window.addEventListener('pageshow', resetRouteBuilderLoading);
 
 const timeAnswerButtons = document.querySelectorAll('[data-time-answer]');
 
+const appendPreferenceAnswer = (routePreferencesForm, answer) => {
+    const textarea = routePreferencesForm.querySelector('[name="description"]');
+
+    if (!textarea) {
+        return;
+    }
+
+    const currentText = textarea.value.trim();
+    const normalizedText = currentText.replace(/[.!?…\s]+$/, '');
+
+    textarea.value = normalizedText ? `${normalizedText}. ${answer}` : answer;
+};
+
 timeAnswerButtons.forEach((button) => {
     button.addEventListener('click', () => {
         const routePreferencesForm = document.querySelector('[data-route-preferences-form]');
@@ -87,7 +100,6 @@ timeAnswerButtons.forEach((button) => {
             return;
         }
 
-        const textarea = routePreferencesForm.querySelector('[name="description"]');
         const timeConfirmed = routePreferencesForm.querySelector('[data-time-confirmed]');
         const answer = button.dataset.timeAnswer?.trim();
 
@@ -95,15 +107,37 @@ timeAnswerButtons.forEach((button) => {
             return;
         }
 
-        if (textarea) {
-            const currentText = textarea.value.trim();
-            const normalizedText = currentText.replace(/[.!?…\s]+$/, '');
-
-            textarea.value = normalizedText ? `${normalizedText}. ${answer}` : answer;
-        }
+        appendPreferenceAnswer(routePreferencesForm, answer);
 
         if (timeConfirmed) {
             timeConfirmed.value = '1';
+        }
+
+        routePreferencesForm.requestSubmit();
+    });
+});
+
+const budgetAnswerButtons = document.querySelectorAll('[data-budget-answer]');
+
+budgetAnswerButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+        const routePreferencesForm = document.querySelector('[data-route-preferences-form]');
+
+        if (!routePreferencesForm) {
+            return;
+        }
+
+        const budgetConfirmed = routePreferencesForm.querySelector('[data-budget-confirmed]');
+        const answer = button.dataset.budgetAnswer?.trim();
+
+        if (!answer) {
+            return;
+        }
+
+        appendPreferenceAnswer(routePreferencesForm, answer);
+
+        if (budgetConfirmed) {
+            budgetConfirmed.value = '1';
         }
 
         routePreferencesForm.requestSubmit();

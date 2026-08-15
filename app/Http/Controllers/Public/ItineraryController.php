@@ -10,6 +10,7 @@ use App\Services\Ai\AiPreferenceInterpreter;
 use App\Services\Analytics\JourneyAnalyticsService;
 use App\Services\Itinerary\ItineraryPersistenceService;
 use App\Services\Itinerary\ItineraryService;
+use App\Services\Itinerary\PreferenceFollowUpService;
 use App\DTOs\VisitorPreferencesDTO;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -35,6 +36,7 @@ class ItineraryController extends Controller
         AiExperienceWriter $writer,
         ItineraryPersistenceService $persistence,
         JourneyAnalyticsService $analytics,
+        PreferenceFollowUpService $followUp,
     ) {
         /*
         |--------------------------------------------------------------------------
@@ -100,11 +102,18 @@ class ItineraryController extends Controller
                 );
         }
 
-        if (! $request->boolean('time_confirmed') && ! $this->descriptionMentionsAvailableTime($data['description'])) {
+        $nextQuestion = $followUp->nextQuestion(
+            description: $data['description'],
+            timeConfirmed: $request->boolean('time_confirmed'),
+            budgetConfirmed: $request->boolean('budget_confirmed'),
+        );
+
+        if ($nextQuestion !== null) {
             return back()
                 ->withInput()
                 ->with([
-                    'needs_time_question' => true,
+                    'needs_time_question' => $nextQuestion === PreferenceFollowUpService::TIME,
+                    'needs_budget_question' => $nextQuestion === PreferenceFollowUpService::BUDGET,
                 ]);
         }
 
@@ -351,36 +360,4 @@ class ItineraryController extends Controller
         return $score;
     }
 
-    private function descriptionMentionsAvailableTime(string $description): bool
-    {
-        $normalized = str($description)
-            ->lower()
-            ->ascii()
-            ->toString();
-
-        if (preg_match('/\b\d+\s*(h|hora|horas|min|minuto|minutos)\b/', $normalized) === 1) {
-            return true;
-        }
-
-        if (preg_match('/\b\d+\s*(a|ate|-)\s*\d+\s*(h|hora|horas)\b/', $normalized) === 1) {
-            return true;
-        }
-
-        foreach ([
-            'manha toda',
-            'tarde toda',
-            'noite toda',
-            'dia inteiro',
-            'meio periodo',
-            'periodo inteiro',
-            'pouco tempo',
-            'tempo livre',
-        ] as $term) {
-            if (str_contains($normalized, $term)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 }

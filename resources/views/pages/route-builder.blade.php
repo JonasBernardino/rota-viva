@@ -91,6 +91,35 @@
                 </div>
             @endif
 
+            @if (session('needs_budget_question'))
+                <div class="route-builder-followup" role="status" aria-live="polite">
+                    <p class="eyebrow">Só preciso de mais uma informação</p>
+                    <h2>Quanto você quer gastar nessa experiência?</h2>
+                    <p>
+                        Como sua busca envolve custos, essa resposta ajuda a manter toda a rota dentro do valor que faz
+                        sentido para você.
+                    </p>
+                    <div class="route-builder-time-options" aria-label="Escolha o orçamento disponível">
+                        <button type="button" class="route-builder-time-option"
+                            data-budget-answer="Quero somente opções gratuitas.">
+                            Somente gratuito
+                        </button>
+                        <button type="button" class="route-builder-time-option"
+                            data-budget-answer="Meu orçamento máximo é de R$ 50.">
+                            Até R$ 50
+                        </button>
+                        <button type="button" class="route-builder-time-option"
+                            data-budget-answer="Meu orçamento máximo é de R$ 150.">
+                            Até R$ 150
+                        </button>
+                        <button type="button" class="route-builder-time-option"
+                            data-budget-answer="Não tenho limite de orçamento definido.">
+                            Sem limite definido
+                        </button>
+                    </div>
+                </div>
+            @endif
+
             @if (session('route_error'))
                 <div class="route-builder-empty-state" role="status">
                     <p class="eyebrow">Vamos ajustar sua busca</p>
@@ -145,6 +174,7 @@
                 data-loading-description="Estamos avaliando tempo, orçamento, perfil e atrativos oficiais do município.">
                 @csrf
                 <input type="hidden" name="time_confirmed" value="{{ old('time_confirmed') }}" data-time-confirmed>
+                <input type="hidden" name="budget_confirmed" value="{{ old('budget_confirmed') }}" data-budget-confirmed>
                 <label for="experience-query">Conte o que você
                     procura</label>
                 <textarea id="experience-query" name="description" rows="7"

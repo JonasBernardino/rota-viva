@@ -89,6 +89,21 @@ class LocalPreferenceInterpreter
             return (int) $matches[1];
         }
 
+        foreach ([
+            'uma' => 60,
+            'duas' => 120,
+            'tres' => 180,
+            'quatro' => 240,
+            'cinco' => 300,
+            'seis' => 360,
+            'sete' => 420,
+            'oito' => 480,
+        ] as $hours => $minutes) {
+            if (preg_match('/\b'.$hours.'\s+horas?\b/', $text) === 1) {
+                return $minutes;
+            }
+        }
+
         if ($this->containsAny($text, ['manha toda', 'tarde toda', 'noite toda', 'meio periodo'])) {
             return 240;
         }
@@ -102,14 +117,49 @@ class LocalPreferenceInterpreter
 
     private function detectBudget(string $text): ?float
     {
-        if (preg_match('/(?:r\$|rs|\$)?\s*(\d{2,5})(?:[,.](\d{2}))?/', $text, $matches) !== 1) {
+        if (preg_match('/\b(?:somente|apenas)\b.{0,30}\b(?:gratuit\w*|gratis)\b/', $text) === 1) {
+            return 0.0;
+        }
+
+        if ($this->containsAny($text, [
+            'somente gratuito',
+            'somente gratuita',
+            'somente gratuitos',
+            'somente gratuitas',
+            'somente gratis',
+            'apenas gratuito',
+            'apenas gratuita',
+            'apenas gratuitos',
+            'apenas gratuitas',
+            'apenas gratis',
+            'sem gastar',
+            'sem custo',
+        ])) {
+            return 0.0;
+        }
+
+        $matches = [];
+
+        foreach ([
+            '/(?:r\$|rs)\s*(\d{1,5})(?:[,.](\d{1,2}))?/',
+            '/(\d{1,5})(?:[,.](\d{1,2}))?\s*(?:reais|real)\b/',
+            '/(?:orcamento|gastar|gasto|limite|custo|valor)\D{0,24}(\d{1,5})(?:[,.](\d{1,2}))?/',
+        ] as $pattern) {
+            if (preg_match($pattern, $text, $matches) === 1) {
+                break;
+            }
+
+            $matches = [];
+        }
+
+        if ($matches === []) {
             return null;
         }
 
         $value = (float) $matches[1];
 
         if (isset($matches[2]) && $matches[2] !== '') {
-            $value += ((float) $matches[2]) / 100;
+            $value += ((float) str_pad($matches[2], 2, '0')) / 100;
         }
 
         return $value;
