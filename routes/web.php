@@ -4,6 +4,7 @@ use App\Http\Controllers\Public\AdaptationController;
 use App\Http\Controllers\Public\CatalogController;
 use App\Http\Controllers\Public\ItineraryController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\DashboardController;
 
 Route::view('/', 'home')->name('home');
 
@@ -41,13 +42,13 @@ $catalogs = [
 ];
 
 foreach ($catalogs as $routePrefix => $uri) {
-    Route::get('/'.$uri, [CatalogController::class, 'index'])
+    Route::get('/' . $uri, [CatalogController::class, 'index'])
         ->defaults('section', $routePrefix)
-        ->name($routePrefix.'.index');
+        ->name($routePrefix . '.index');
 
-    Route::get('/'.$uri.'/{slug}', [CatalogController::class, 'show'])
+    Route::get('/' . $uri . '/{slug}', [CatalogController::class, 'show'])
         ->defaults('section', $routePrefix)
-        ->name($routePrefix.'.show');
+        ->name($routePrefix . '.show');
 }
 
 Route::view('/mapa-da-cidade', 'pages.map')->name('city-map');
@@ -86,7 +87,10 @@ foreach ($institutionalPages as $name => [$uri, $title, $description]) {
 }
 
 Route::middleware(['auth', 'can:access-admin-panel'])->prefix('gestor')->name('admin.')->group(function (): void {
-    Route::view('/', 'admin.dashboard')->name('dashboard');
+    Route::get(
+        '/',
+        [DashboardController::class, 'index']
+    )->name('dashboard');
 
     $modules = [
         'tourist-spots' => 'Pontos turísticos',
@@ -99,6 +103,6 @@ Route::middleware(['auth', 'can:access-admin-panel'])->prefix('gestor')->name('a
     ];
 
     foreach ($modules as $name => $title) {
-        Route::view('/'.$name, 'admin.module', compact('title'))->name($name.'.index');
+        Route::view('/' . $name, 'admin.module', compact('title'))->name($name . '.index');
     }
 });

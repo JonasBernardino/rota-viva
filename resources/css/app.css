@@ -2311,3 +2311,269 @@ input:focus-visible {
 .route-builder-error p {
     margin: 0;
 }
+
+.admin-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+.admin-dashboard__heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.dashboard-period {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.dashboard-period label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.dashboard-period select {
+    min-width: 190px;
+    padding: 0.8rem 1rem;
+    border: 1px solid #d9dedb;
+    border-radius: 0.75rem;
+    background: #fff;
+}
+
+.dashboard-kpis {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            5,
+            minmax(0, 1fr)
+        );
+    gap: 1rem;
+}
+
+.dashboard-kpi,
+.dashboard-panel {
+    border: 1px solid #e1e5e2;
+    border-radius: 1.25rem;
+    background: #fff;
+}
+
+.dashboard-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-height: 145px;
+    padding: 1.4rem;
+}
+
+.dashboard-kpi > span {
+    color: #667069;
+    font-size: 0.82rem;
+}
+
+.dashboard-kpi > strong {
+    margin-top: auto;
+    color: #153b2e;
+    font-size: 2rem;
+}
+
+.dashboard-kpi small {
+    color: #7b827e;
+}
+
+.dashboard-section-heading {
+    margin-top: 1rem;
+}
+
+.dashboard-two-columns {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+    gap: 1.25rem;
+}
+
+.dashboard-panel {
+    padding: 1.6rem;
+}
+
+.dashboard-panel h3 {
+    margin:
+        0.35rem
+        0
+        1.4rem;
+}
+
+.dashboard-ranking {
+    margin-bottom: 1rem;
+}
+
+.dashboard-ranking > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.dashboard-progress {
+    height: 7px;
+    margin-top: 0.45rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #edf0ee;
+}
+
+.dashboard-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #315c4c;
+}
+
+.dashboard-map-panel {
+    padding: 1rem;
+}
+
+.dashboard-map-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    padding: 0.4rem 0.4rem 1.2rem;
+}
+
+.dashboard-map-filter {
+    padding: 0.7rem 1rem;
+    border: 1px solid #dce2de;
+    border-radius: 999px;
+    background: #fff;
+    color: #52615a;
+    cursor: pointer;
+}
+
+.dashboard-map-filter.is-active {
+    border-color: #153b2e;
+    background: #153b2e;
+    color: #fff;
+}
+
+.dashboard-heatmap {
+    width: 100%;
+    min-height: 520px;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.dashboard-top-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    margin: 0;
+    list-style-position: inside;
+}
+
+.dashboard-top-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid #edf0ee;
+}
+
+.dashboard-top-list li:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-top-list li strong {
+    color: #667069;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.dashboard-panel--opportunities {
+    background: #f6f3eb;
+}
+
+.dashboard-opportunities {
+    margin-top: 1.4rem;
+}
+
+.dashboard-opportunity {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom:
+        1px solid
+        rgba(21, 59, 46, 0.1);
+}
+
+.dashboard-opportunity:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-opportunity div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.dashboard-opportunity span {
+    color: #757d78;
+    font-size: 0.8rem;
+}
+
+.dashboard-opportunity > strong {
+    color: #153b2e;
+    font-size: 1.4rem;
+}
+
+.dashboard-empty {
+    color: #7b827e;
+}
+
+@media (max-width: 1200px) {
+    .dashboard-kpis {
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            );
+    }
+}
+
+@media (max-width: 800px) {
+    .admin-dashboard__heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .dashboard-kpis {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+    .dashboard-two-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-heatmap {
+        min-height: 420px;
+    }
+}
+
+@media (max-width: 520px) {
+    .dashboard-kpis {
+        grid-template-columns: 1fr;
+    }
+}
