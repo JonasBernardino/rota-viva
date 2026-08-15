@@ -276,12 +276,20 @@
 
                 <form
                     action="{{ route('routes.adapt.rain', $itinerary) }}"
-                    method="post">
+                    method="post"
+                    data-route-builder-form
+                    data-loading-label="Adaptando sua rota..."
+                    data-loading-title="Adaptando sua rota por causa da chuva"
+                    data-loading-description="Estamos preservando o que ainda funciona e buscando alternativas cobertas compatíveis com seu tempo, orçamento e perfil.">
 
                     @csrf
 
-                    <button class="route-cta" type="submit">
-                        ☂ Começou a chover
+                    <p class="route-builder-status" data-route-builder-status hidden role="status">
+                        Estamos analisando quais paradas continuam seguras e quais precisam ser substituídas por opções cobertas.
+                    </p>
+
+                    <button class="route-cta" type="submit" data-route-builder-submit>
+                        <span data-route-builder-submit-label>☂ Começou a chover</span>
                     </button>
 
                 </form>
@@ -291,5 +299,14 @@
         </div>
 
     </section>
+
+    <div class="route-builder-loading" data-route-builder-loading hidden role="status" aria-live="polite">
+        <div class="route-builder-loading__panel">
+            <span class="route-builder-loading__spinner" aria-hidden="true"></span>
+            <p class="eyebrow">Rota Viva em movimento</p>
+            <strong>Adaptando sua rota por causa da chuva</strong>
+            <span>Estamos preservando o que ainda funciona e buscando alternativas cobertas compatíveis com seu tempo, orçamento e perfil.</span>
+        </div>
+    </div>
 
 @endsection

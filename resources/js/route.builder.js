@@ -1,25 +1,43 @@
-const routeBuilderForm = document.querySelector('[data-route-builder-form]');
+const routeBuilderForms = document.querySelectorAll('[data-route-builder-form]');
 
-routeBuilderForm?.addEventListener('submit', () => {
-    const submitButton = routeBuilderForm.querySelector('[data-route-builder-submit]');
-    const submitLabel = routeBuilderForm.querySelector('[data-route-builder-submit-label]');
-    const status = routeBuilderForm.querySelector('[data-route-builder-status]');
-    const loading = document.querySelector('[data-route-builder-loading]');
+routeBuilderForms.forEach((routeBuilderForm) => {
+    routeBuilderForm.addEventListener('submit', () => {
+        const submitButton = routeBuilderForm.querySelector('[data-route-builder-submit]');
+        const submitLabel = routeBuilderForm.querySelector('[data-route-builder-submit-label]');
+        const status = routeBuilderForm.querySelector('[data-route-builder-status]');
+        const loading = document.querySelector('[data-route-builder-loading]');
 
-    if (submitButton) {
-        submitButton.setAttribute('aria-busy', 'true');
-        submitButton.setAttribute('disabled', 'disabled');
-    }
+        const loadingLabel = routeBuilderForm.dataset.loadingLabel ?? 'Processando...';
+        const loadingTitle = routeBuilderForm.dataset.loadingTitle;
+        const loadingDescription = routeBuilderForm.dataset.loadingDescription;
 
-    if (submitLabel) {
-        submitLabel.textContent = 'Criando sua rota...';
-    }
+        const loadingPanel = loading?.querySelector('.route-builder-loading__panel');
+        const loadingTitleElement = loadingPanel?.querySelector('strong');
+        const loadingDescriptionElement = loadingPanel?.querySelector('span:last-child');
 
-    if (status) {
-        status.hidden = false;
-    }
+        if (submitButton) {
+            submitButton.setAttribute('aria-busy', 'true');
+            submitButton.setAttribute('disabled', 'disabled');
+        }
 
-    if (loading) {
-        loading.hidden = false;
-    }
+        if (submitLabel) {
+            submitLabel.textContent = loadingLabel;
+        }
+
+        if (loadingTitle && loadingTitleElement) {
+            loadingTitleElement.textContent = loadingTitle;
+        }
+
+        if (loadingDescription && loadingDescriptionElement) {
+            loadingDescriptionElement.textContent = loadingDescription;
+        }
+
+        if (status) {
+            status.hidden = false;
+        }
+
+        if (loading) {
+            loading.hidden = false;
+        }
+    });
 });

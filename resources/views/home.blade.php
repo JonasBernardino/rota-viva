@@ -299,7 +299,8 @@
                     </div>
                 </div>
                 <div class="local-economy__image">
-                    <img src="{{ $homeContent['local_economy_image_url'] }}" alt="{{ $homeContent['local_economy_image_alt'] }}">
+                    <img class="local-economy__image-bg" src="{{ $homeContent['local_economy_image_url'] }}" alt="" aria-hidden="true">
+                    <img class="local-economy__image-main" src="{{ $homeContent['local_economy_image_url'] }}" alt="{{ $homeContent['local_economy_image_alt'] }}">
                 </div>
             </section>
 

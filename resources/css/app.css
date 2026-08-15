@@ -1913,12 +1913,15 @@ textarea:focus-visible {
 .local-economy {
     display: grid;
     grid-template-columns: 46% 54%;
+    height: clamp(520px, 38vw, 620px);
+    overflow: hidden;
 }
 
 .local-economy__copy {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    min-height: 0;
     padding: clamp(3rem, 6vw, 6rem) clamp(2rem, 5vw, 5rem);
 }
 
@@ -1950,12 +1953,36 @@ textarea:focus-visible {
     font-size: 2rem;
 }
 
+.local-economy__image {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 0;
+    overflow: hidden;
+    background: #0b3f35;
+}
+
 .local-economy__image img {
     display: block;
+}
+
+.local-economy__image-bg {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
-    min-height: 570px;
     object-fit: cover;
+    filter: blur(22px) saturate(0.92) brightness(0.72);
+    opacity: 0.58;
+    transform: scale(1.08);
+}
+
+.local-economy__image-main {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .final-cta {
@@ -2310,6 +2337,14 @@ html[data-theme="dark"] .local-economy__copy {
         #0b1511;
 }
 
+html[data-theme="dark"] .local-economy__image-bg {
+    filter: blur(22px) saturate(0.84) brightness(0.52);
+}
+
+html[data-theme="dark"] .local-economy__image-main {
+    filter: brightness(0.86) saturate(0.92);
+}
+
 html[data-theme="dark"] .local-economy .local-opportunities {
     color: var(--forest) !important;
 }
@@ -2570,6 +2605,11 @@ html[data-theme="dark"] .leaflet-tile {
         grid-template-columns: 1fr;
     }
 
+    .local-economy {
+        height: auto;
+        overflow: visible;
+    }
+
     .adaptive-route__copy {
         padding-right: 0;
     }
@@ -2598,7 +2638,7 @@ html[data-theme="dark"] .leaflet-tile {
     }
 
     .local-economy__image img {
-        min-height: 480px;
+        height: 420px;
     }
 
     .site-footer__grid {
@@ -2810,7 +2850,7 @@ html[data-theme="dark"] .leaflet-tile {
     }
 
     .local-economy__image img {
-        min-height: 380px;
+        height: 320px;
     }
 
     .final-cta__content {

@@ -89,7 +89,10 @@
                 </div>
             @endif
 
-            <form action="{{ route('routes.store') }}" method="post" data-route-builder-form>
+            <form action="{{ route('routes.store') }}" method="post" data-route-builder-form
+                data-loading-label="Criando sua rota..."
+                data-loading-title="Criando sua experiência personalizada"
+                data-loading-description="Estamos avaliando tempo, orçamento, perfil e atrativos oficiais do município.">
                 @csrf
                 <label for="experience-query">Conte o que você
                     procura</label>
