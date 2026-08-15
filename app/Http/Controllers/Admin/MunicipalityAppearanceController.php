@@ -24,11 +24,11 @@ class MunicipalityAppearanceController extends Controller
 
         $data = $request->validate([
             'brand_name' => ['required', 'string', 'max:80'],
-            'brand_logo' => ['nullable', 'image', 'max:2048'],
+            'brand_logo' => $this->safeLogoRules(),
             'hero_eyebrow' => ['required', 'string', 'max:80'],
             'hero_title' => ['required', 'string', 'max:120'],
             'hero_description' => ['required', 'string', 'max:280'],
-            'hero_image' => ['nullable', 'image', 'max:4096'],
+            'hero_image' => $this->safeImageRules(),
             'hero_image_alt' => ['nullable', 'string', 'max:180'],
             'hero_search_placeholder' => ['required', 'string', 'max:140'],
             'hero_card_title' => ['required', 'string', 'max:100'],
@@ -39,7 +39,7 @@ class MunicipalityAppearanceController extends Controller
             'local_economy_stat' => ['nullable', 'string', 'max:120'],
             'local_economy_link_label' => ['nullable', 'string', 'max:100'],
             'local_economy_link_url' => ['nullable', 'string', 'max:255'],
-            'local_economy_image' => ['nullable', 'image', 'max:4096'],
+            'local_economy_image' => $this->safeImageRules(),
             'local_economy_image_alt' => ['nullable', 'string', 'max:180'],
         ]);
 
@@ -90,5 +90,33 @@ class MunicipalityAppearanceController extends Controller
         }
 
         Storage::disk('public')->delete($path);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function safeImageRules(int $maxKilobytes = 4096): array
+    {
+        return [
+            'nullable',
+            'image',
+            'mimes:jpg,jpeg,png,webp',
+            'max:'.$maxKilobytes,
+            'dimensions:min_width=320,min_height=180,max_width=6000,max_height=6000',
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function safeLogoRules(): array
+    {
+        return [
+            'nullable',
+            'image',
+            'mimes:jpg,jpeg,png,webp',
+            'max:2048',
+            'dimensions:min_width=64,min_height=64,max_width=3000,max_height=3000',
+        ];
     }
 }

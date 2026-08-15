@@ -10,11 +10,15 @@ use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\GeminiProvider;
 use App\Services\Ai\OllamaProvider;
 use App\Services\Tenant\TenantManager;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class AppServiceProvider extends ServiceProvider
@@ -96,6 +100,24 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        RateLimiter::for('login', function (Request $request): Limit {
+            $email = Str::lower((string) $request->input('email'));
+
+            return Limit::perMinute(5)->by($email.'|'.$request->ip());
+        });
+
+        RateLimiter::for('route-generation', function (Request $request): Limit {
+            return Limit::perMinute(6)->by($request->ip());
+        });
+
+        RateLimiter::for('route-adaptation', function (Request $request): Limit {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        RateLimiter::for('admin-actions', function (Request $request): Limit {
+            return Limit::perMinute(30)->by(($request->user()?->id ?? 'guest').'|'.$request->ip());
+        });
+
         Gate::define('access-admin-panel', function (User $user): bool {
             if (! (bool) ($user->can_access_admin_panel ?? false)) {
                 return false;

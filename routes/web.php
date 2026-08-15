@@ -151,7 +151,9 @@ Route::get(
 Route::post(
     '/criar-rota',
     [ItineraryController::class, 'store']
-)->name('routes.store');
+)
+    ->middleware('throttle:route-generation')
+    ->name('routes.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -189,7 +191,9 @@ Route::get(
 Route::post(
     '/minha-rota/{itinerary}/adaptar/chuva',
     [AdaptationController::class, 'rain']
-)->name('routes.adapt.rain');
+)
+    ->middleware('throttle:route-adaptation')
+    ->name('routes.adapt.rain');
 
 Route::get(
     '/minha-rota/{itinerary}/adaptacoes/{adaptation}',
@@ -215,7 +219,9 @@ Route::get(
 Route::post(
     '/gestor/entrar',
     [AuthController::class, 'login']
-)->name('login.post');
+)
+    ->middleware('throttle:login')
+    ->name('login.post');
 
 Route::post(
     '/sair',
@@ -232,7 +238,9 @@ Route::post(
 Route::middleware(['auth', 'can:manage-platform'])->prefix('plataforma')->name('platform.')->group(function (): void {
     Route::get('/', [PlatformController::class, 'dashboard'])->name('dashboard');
     Route::get('/municipios/novo', [PlatformController::class, 'createMunicipality'])->name('municipalities.create');
-    Route::post('/municipios', [PlatformController::class, 'storeMunicipality'])->name('municipalities.store');
+    Route::post('/municipios', [PlatformController::class, 'storeMunicipality'])
+        ->middleware('throttle:admin-actions')
+        ->name('municipalities.store');
 });
 
 $institutionalPages = [
@@ -337,7 +345,9 @@ Route::middleware([
         Route::put(
             '/aparencia',
             [MunicipalityAppearanceController::class, 'update']
-        )->name('appearance.update');
+        )
+            ->middleware('throttle:admin-actions')
+            ->name('appearance.update');
 
         /*
         |--------------------------------------------------------------------------
@@ -423,6 +433,7 @@ Route::middleware([
                     'module',
                     $name
                 )
+                ->middleware('throttle:admin-actions')
                 ->name(
                     $name.'.store'
                 );
@@ -467,6 +478,7 @@ Route::middleware([
                     $name
                 )
                 ->whereNumber('id')
+                ->middleware('throttle:admin-actions')
                 ->name(
                     $name.'.update'
                 );
@@ -489,6 +501,7 @@ Route::middleware([
                     $name
                 )
                 ->whereNumber('id')
+                ->middleware('throttle:admin-actions')
                 ->name(
                     $name.'.destroy'
                 );

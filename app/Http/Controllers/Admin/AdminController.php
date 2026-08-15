@@ -225,7 +225,7 @@ class AdminController extends Controller
                 'is_ar_livre' => ['nullable', 'boolean'],
                 'adequado_criancas' => ['nullable', 'boolean'],
                 'is_disponivel' => ['nullable', 'boolean'],
-                'imagem' => ['nullable', 'image', 'max:4096'],
+                'imagem' => $this->safeImageRules(),
                 'imagem_alt' => ['nullable', 'string', 'max:180'],
             ]),
             'business' => $request->validate([
@@ -244,7 +244,7 @@ class AdminController extends Controller
                 'faixa_preco' => ['required', 'string', 'max:10'],
                 'tem_selo_qualidade' => ['nullable', 'boolean'],
                 'status_validacao' => ['required', 'in:pending,approved,rejected,suspended'],
-                'imagem' => ['nullable', 'image', 'max:4096'],
+                'imagem' => $this->safeImageRules(),
             ]),
             'event' => $request->validate([
                 'nome' => ['required', 'string', 'max:255'],
@@ -263,7 +263,7 @@ class AdminController extends Controller
                 'organizador' => ['nullable', 'string', 'max:255'],
                 'capacidade' => ['nullable', 'integer', 'min:1'],
                 'status' => ['required', 'in:scheduled,draft,cancelled,finished'],
-                'imagem' => ['nullable', 'image', 'max:4096'],
+                'imagem' => $this->safeImageRules(),
             ]),
             'itinerary' => $request->validate([
                 'titulo' => ['required', 'string', 'max:255'],
@@ -409,6 +409,20 @@ class AdminController extends Controller
             'business' => $this->replaceModelImage($item, 'imagem_capa', $path),
             'event' => $this->replaceModelImage($item, 'imagem_url', $path),
         };
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function safeImageRules(int $maxKilobytes = 4096): array
+    {
+        return [
+            'nullable',
+            'image',
+            'mimes:jpg,jpeg,png,webp',
+            'max:'.$maxKilobytes,
+            'dimensions:min_width=320,min_height=180,max_width=6000,max_height=6000',
+        ];
     }
 
     private function storePlaceImage(Atrativo $place, string $path, Request $request): void
