@@ -35,11 +35,34 @@ return [
         ],
     ],
     'ai' => [
-        'provider' => env('AI_PROVIDER', 'gemini'),
+        'provider' => env(
+            'AI_PROVIDER',
+            'deepseek'
+        ),
 
         'gemini' => [
-            'api_key' => env('GEMINI_API_KEY'),
-            'model' => env('GEMINI_MODEL'),
+            'api_key' =>
+            env('GEMINI_API_KEY'),
+
+            'model' =>
+            env('GEMINI_MODEL'),
+        ],
+
+        'deepseek' => [
+            'api_key' =>
+            env('DEEPSEEK_API_KEY'),
+
+            'model' =>
+            env(
+                'DEEPSEEK_MODEL',
+                'deepseek-v4-flash'
+            ),
+
+            'base_url' =>
+            env(
+                'DEEPSEEK_BASE_URL',
+                'https://api.deepseek.com'
+            ),
         ],
     ],
 ];
