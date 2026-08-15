@@ -63,6 +63,24 @@ themeButton?.addEventListener("click", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    document
+        .querySelectorAll("[data-municipality-selector]")
+        .forEach((selector) => {
+            selector.addEventListener("change", () => {
+                const selectedOption =
+                    selector.options[selector.selectedIndex] ?? null;
+                const destinationUrl = selectedOption?.dataset?.url;
+
+                if (destinationUrl) {
+                    window.location.assign(destinationUrl);
+
+                    return;
+                }
+
+                selector.form?.requestSubmit();
+            });
+        });
+
     initializeRouteMaps();
     initializeHeatmap();
 });

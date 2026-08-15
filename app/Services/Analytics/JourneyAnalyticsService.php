@@ -39,19 +39,15 @@ class JourneyAnalyticsService
                  * Mantemos o payload analítico em inglês,
                  * mas lemos os campos novos do Model Roteiro.
                  */
-                'itinerary_id' =>
-                    $itinerary->id,
+                'itinerary_id' => $itinerary->id,
 
-                'total_duration_minutes' =>
-                    $itinerary->duracao_total_minutos,
+                'total_duration_minutes' => $itinerary->duracao_total_minutos,
 
-                'total_estimated_cost' =>
-                    $itinerary->custo_total_estimado,
+                'total_estimated_cost' => $itinerary->custo_total_estimado,
 
-                'preferences' =>
-                    $this->preferencesPayload(
-                        $preferences
-                    ),
+                'preferences' => $this->preferencesPayload(
+                    $preferences
+                ),
             ]
         );
     }
@@ -63,13 +59,11 @@ class JourneyAnalyticsService
         $this->record(
             JourneyEventType::ROUTE_NOT_FOUND,
             [
-                'reason' =>
-                    $reason,
+                'reason' => $reason,
 
-                'preferences' =>
-                    $this->preferencesPayload(
-                        $preferences
-                    ),
+                'preferences' => $this->preferencesPayload(
+                    $preferences
+                ),
             ]
         );
     }
@@ -87,26 +81,19 @@ class JourneyAnalyticsService
                  * O Model AdaptacaoRota, porém,
                  * usa os campos em português.
                  */
-                'itinerary_id' =>
-                    $adaptation->roteiro_id,
+                'itinerary_id' => $adaptation->roteiro_id,
 
-                'adaptation_id' =>
-                    $adaptation->id,
+                'adaptation_id' => $adaptation->id,
 
-                'event' =>
-                    $adaptation->evento,
+                'event' => $adaptation->evento,
 
-                'removed_place_ids' =>
-                    $adapted->removedPlaceIds,
+                'removed_place_ids' => $adapted->removedPlaceIds,
 
-                'added_place_ids' =>
-                    $adapted->addedPlaceIds,
+                'added_place_ids' => $adapted->addedPlaceIds,
 
-                'total_duration_minutes' =>
-                    $adapted->totalDurationMinutes,
+                'total_duration_minutes' => $adapted->totalDurationMinutes,
 
-                'total_estimated_cost' =>
-                    $adapted->totalEstimatedCost,
+                'total_estimated_cost' => $adapted->totalEstimatedCost,
             ]
         );
     }
@@ -121,8 +108,7 @@ class JourneyAnalyticsService
         $this->record(
             JourneyEventType::AI_INTERPRETATION_FAILED,
             [
-                'reason' =>
-                    $reason,
+                'reason' => $reason,
             ]
         );
     }
@@ -131,33 +117,76 @@ class JourneyAnalyticsService
         VisitorPreferencesDTO $preferences
     ): array {
         return [
-            'moods' =>
-                $preferences->moods,
+            'moods' => $preferences->moods,
 
-            'interests' =>
-                $preferences->interests,
+            'interests' => $preferences->interests,
 
-            'available_minutes' =>
-                $preferences->availableMinutes,
+            'available_minutes' => null,
 
-            'budget' =>
-                $preferences->budget,
+            'budget' => null,
 
-            'has_children' =>
-                $preferences->hasChildren,
+            'duration_range' => $this->durationRange(
+                $preferences->availableMinutes
+            ),
 
-            'transport' =>
-                $preferences->transport,
+            'budget_range' => $this->budgetRange(
+                $preferences->budget
+            ),
 
-            'accessibility_requirements' =>
-                $preferences->accessibilityRequirements,
+            'has_children' => $preferences->hasChildren,
 
-            'intensity' =>
-                $preferences->intensity,
+            'transport' => $preferences->transport,
 
-            'missing_information' =>
-                $preferences->missingInformation,
+            'accessibility_requirements' => $preferences->accessibilityRequirements,
+
+            'intensity' => $preferences->intensity,
+
+            'missing_information_count' => count(
+                $preferences->missingInformation
+            ),
         ];
+    }
+
+    private function budgetRange(?float $budget): string
+    {
+        if ($budget === null) {
+            return 'Não informado';
+        }
+
+        if ($budget <= 50) {
+            return 'Até R$ 50';
+        }
+
+        if ($budget <= 150) {
+            return 'R$ 51–150';
+        }
+
+        if ($budget <= 300) {
+            return 'R$ 151–300';
+        }
+
+        return 'Acima de R$ 300';
+    }
+
+    private function durationRange(?int $minutes): string
+    {
+        if ($minutes === null) {
+            return 'Não informado';
+        }
+
+        if ($minutes <= 120) {
+            return 'Até 2h';
+        }
+
+        if ($minutes <= 240) {
+            return '2h–4h';
+        }
+
+        if ($minutes <= 360) {
+            return '4h–6h';
+        }
+
+        return 'Mais de 6h';
     }
 
     private function record(
@@ -169,27 +198,21 @@ class JourneyAnalyticsService
          */
         try {
             JourneyEvent::create([
-                'session_uuid' =>
-                    $this->sessionUuid(),
+                'session_uuid' => $this->sessionUuid(),
 
-                'event_type' =>
-                    $event->value,
+                'event_type' => $event->value,
 
-                'payload' =>
-                    $payload,
+                'payload' => $payload,
 
-                'occurred_at' =>
-                    now(),
+                'occurred_at' => now(),
             ]);
         } catch (Throwable $exception) {
             Log::warning(
                 'Falha ao registrar evento analítico.',
                 [
-                    'event' =>
-                        $event->value,
+                    'event' => $event->value,
 
-                    'error' =>
-                        $exception->getMessage(),
+                    'error' => $exception->getMessage(),
                 ]
             );
         }

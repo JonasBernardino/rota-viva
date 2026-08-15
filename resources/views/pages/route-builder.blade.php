@@ -18,6 +18,8 @@
                 <li><span>04</span>Sua experiência</li>
             </ol>
 
+            @include('partials.ai-disclaimer')
+
             @if (session('ai_error'))
                 <div class="route-builder-error" role="alert">
 

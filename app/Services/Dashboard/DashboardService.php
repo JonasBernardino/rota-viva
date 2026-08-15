@@ -20,42 +20,32 @@ class DashboardService
         );
 
         return [
-            'overview' =>
-                $this->overview($from),
+            'overview' => $this->overview($from),
 
-            'interests' =>
-                $this->topInterests($from),
+            'interests' => $this->topInterests($from),
 
-            'moods' =>
-                $this->topMoods($from),
+            'moods' => $this->topMoods($from),
 
-            'budgets' =>
-                $this->budgetDistribution($from),
+            'budgets' => $this->budgetDistribution($from),
 
-            'durations' =>
-                $this->durationDistribution($from),
+            'durations' => $this->durationDistribution($from),
 
-            'topPlaces' =>
-                $this->topPlaces($from),
+            'topPlaces' => $this->topPlaces($from),
 
-            'unmetDemand' =>
-                $this->unmetDemand($from),
+            'unmetDemand' => $this->unmetDemand($from),
 
             'heatmap' => [
-                'demand' =>
-                    $this->routeDemandHeatmap($from),
+                'demand' => $this->routeDemandHeatmap($from),
 
-                'added' =>
-                    $this->adaptationHeatmap(
-                        $from,
-                        'ADDED'
-                    ),
+                'added' => $this->adaptationHeatmap(
+                    $from,
+                    'ADDED'
+                ),
 
-                'removed' =>
-                    $this->adaptationHeatmap(
-                        $from,
-                        'REMOVED'
-                    ),
+                'removed' => $this->adaptationHeatmap(
+                    $from,
+                    'REMOVED'
+                ),
             ],
         ];
     }
@@ -67,24 +57,22 @@ class DashboardService
             Roteiro::query()
                 ->when(
                     $from,
-                    fn ($query) =>
-                        $query->where(
-                            'created_at',
-                            '>=',
-                            $from
-                        )
+                    fn ($query) => $query->where(
+                        'created_at',
+                        '>=',
+                        $from
+                    )
                 );
 
         $adaptations =
             AdaptacaoRota::query()
                 ->when(
                     $from,
-                    fn ($query) =>
-                        $query->where(
-                            'created_at',
-                            '>=',
-                            $from
-                        )
+                    fn ($query) => $query->where(
+                        'created_at',
+                        '>=',
+                        $from
+                    )
                 );
 
         $failed =
@@ -95,12 +83,11 @@ class DashboardService
                 )
                 ->when(
                     $from,
-                    fn ($query) =>
-                        $query->where(
-                            'occurred_at',
-                            '>=',
-                            $from
-                        )
+                    fn ($query) => $query->where(
+                        'occurred_at',
+                        '>=',
+                        $from
+                    )
                 )
                 ->count();
 
@@ -113,38 +100,32 @@ class DashboardService
                 ->count();
 
         return [
-            'routesCreated' =>
-                $created,
+            'routesCreated' => $created,
 
-            'routesNotFound' =>
-                $failed,
+            'routesNotFound' => $failed,
 
-            'adaptations' =>
-                $adapted,
+            'adaptations' => $adapted,
 
-            'averageCost' =>
-                round(
-                    (float) (
-                        (clone $itineraries)
-                            ->avg(
-                                'custo_total_estimado'
-                            ) ?? 0
-                    ),
-                    2
+            'averageCost' => round(
+                (float) (
+                    (clone $itineraries)
+                        ->avg(
+                            'custo_total_estimado'
+                        ) ?? 0
                 ),
+                2
+            ),
 
-            'averageDuration' =>
-                (int) round(
-                    (float) (
-                        (clone $itineraries)
-                            ->avg(
-                                'duracao_total_minutos'
-                            ) ?? 0
-                    )
-                ),
+            'averageDuration' => (int) round(
+                (float) (
+                    (clone $itineraries)
+                        ->avg(
+                            'duracao_total_minutos'
+                        ) ?? 0
+                )
+            ),
 
-            'adaptationRate' =>
-                $created > 0
+            'adaptationRate' => $created > 0
                     ? round(
                         ($adapted / $created) * 100,
                         1
@@ -163,12 +144,11 @@ class DashboardService
             )
             ->when(
                 $from,
-                fn ($query) =>
-                    $query->where(
-                        'occurred_at',
-                        '>=',
-                        $from
-                    )
+                fn ($query) => $query->where(
+                    'occurred_at',
+                    '>=',
+                    $from
+                )
             )
             ->get();
     }
@@ -179,12 +159,11 @@ class DashboardService
         $values =
             $this->requestedEvents($from)
                 ->flatMap(
-                    fn (JourneyEvent $event) =>
-                        data_get(
-                            $event->payload,
-                            'preferences.interests',
-                            []
-                        )
+                    fn (JourneyEvent $event) => data_get(
+                        $event->payload,
+                        'preferences.interests',
+                        []
+                    )
                 )
                 ->filter();
 
@@ -199,12 +178,11 @@ class DashboardService
         $values =
             $this->requestedEvents($from)
                 ->flatMap(
-                    fn (JourneyEvent $event) =>
-                        data_get(
-                            $event->payload,
-                            'preferences.moods',
-                            []
-                        )
+                    fn (JourneyEvent $event) => data_get(
+                        $event->payload,
+                        'preferences.moods',
+                        []
+                    )
                 )
                 ->filter();
 
@@ -225,27 +203,23 @@ class DashboardService
 
         return $values
             ->map(
-                fn ($value) =>
-                    mb_strtolower(
-                        trim($value)
-                    )
+                fn ($value) => mb_strtolower(
+                    trim($value)
+                )
             )
             ->countBy()
             ->sortDesc()
             ->take(6)
             ->map(
                 fn ($count, $label) => [
-                    'label' =>
-                        ucfirst($label),
+                    'label' => ucfirst($label),
 
-                    'count' =>
-                        $count,
+                    'count' => $count,
 
-                    'percentage' =>
-                        round(
-                            ($count / $total) * 100,
-                            1
-                        ),
+                    'percentage' => round(
+                        ($count / $total) * 100,
+                        1
+                    ),
                 ]
             )
             ->values()
@@ -264,9 +238,20 @@ class DashboardService
         ];
 
         foreach (
-            $this->requestedEvents($from)
-            as $event
+            $this->requestedEvents($from) as $event
         ) {
+            $range =
+                data_get(
+                    $event->payload,
+                    'preferences.budget_range'
+                );
+
+            if (is_string($range) && array_key_exists($range, $buckets)) {
+                $buckets[$range]++;
+
+                continue;
+            }
+
             $budget =
                 data_get(
                     $event->payload,
@@ -317,9 +302,20 @@ class DashboardService
         ];
 
         foreach (
-            $this->requestedEvents($from)
-            as $event
+            $this->requestedEvents($from) as $event
         ) {
+            $range =
+                data_get(
+                    $event->payload,
+                    'preferences.duration_range'
+                );
+
+            if (is_string($range) && array_key_exists($range, $buckets)) {
+                $buckets[$range]++;
+
+                continue;
+            }
+
             $minutes =
                 data_get(
                     $event->payload,
@@ -371,14 +367,11 @@ class DashboardService
         )
             ->map(
                 fn ($count, $label) => [
-                    'label' =>
-                        $label,
+                    'label' => $label,
 
-                    'count' =>
-                        $count,
+                    'count' => $count,
 
-                    'percentage' =>
-                        $total > 0
+                    'percentage' => $total > 0
                             ? round(
                                 ($count / $total) * 100,
                                 1
@@ -410,12 +403,11 @@ class DashboardService
             )
             ->when(
                 $from,
-                fn ($query) =>
-                    $query->where(
-                        'roteiro.created_at',
-                        '>=',
-                        $from
-                    )
+                fn ($query) => $query->where(
+                    'roteiro.created_at',
+                    '>=',
+                    $from
+                )
             )
             ->select(
                 'atrativo.id',
@@ -436,14 +428,11 @@ class DashboardService
             ->get()
             ->map(
                 fn ($item) => [
-                    'id' =>
-                        $item->id,
+                    'id' => $item->id,
 
-                    'name' =>
-                        $item->nome,
+                    'name' => $item->nome,
 
-                    'count' =>
-                        (int)
+                    'count' => (int)
                         $item->routes_count,
                 ]
             )
@@ -476,12 +465,11 @@ class DashboardService
             )
             ->when(
                 $from,
-                fn ($query) =>
-                    $query->where(
-                        'roteiro.created_at',
-                        '>=',
-                        $from
-                    )
+                fn ($query) => $query->where(
+                    'roteiro.created_at',
+                    '>=',
+                    $from
+                )
             )
             ->select(
                 'atrativo.id',
@@ -502,22 +490,17 @@ class DashboardService
             ->get()
             ->map(
                 fn ($item) => [
-                    'id' =>
-                        $item->id,
+                    'id' => $item->id,
 
-                    'name' =>
-                        $item->nome,
+                    'name' => $item->nome,
 
-                    'latitude' =>
-                        (float)
+                    'latitude' => (float)
                         $item->latitude,
 
-                    'longitude' =>
-                        (float)
+                    'longitude' => (float)
                         $item->longitude,
 
-                    'intensity' =>
-                        (int)
+                    'intensity' => (int)
                         $item->intensity,
                 ]
             )
@@ -555,12 +538,11 @@ class DashboardService
             )
             ->when(
                 $from,
-                fn ($query) =>
-                    $query->where(
-                        'adaptacao.created_at',
-                        '>=',
-                        $from
-                    )
+                fn ($query) => $query->where(
+                    'adaptacao.created_at',
+                    '>=',
+                    $from
+                )
             )
             ->select(
                 'atrativo.id',
@@ -581,22 +563,17 @@ class DashboardService
             ->get()
             ->map(
                 fn ($item) => [
-                    'id' =>
-                        $item->id,
+                    'id' => $item->id,
 
-                    'name' =>
-                        $item->nome,
+                    'name' => $item->nome,
 
-                    'latitude' =>
-                        (float)
+                    'latitude' => (float)
                         $item->latitude,
 
-                    'longitude' =>
-                        (float)
+                    'longitude' => (float)
                         $item->longitude,
 
-                    'intensity' =>
-                        (int)
+                    'intensity' => (int)
                         $item->intensity,
                 ]
             )
@@ -614,12 +591,11 @@ class DashboardService
                 )
                 ->when(
                     $from,
-                    fn ($query) =>
-                        $query->where(
-                            'occurred_at',
-                            '>=',
-                            $from
-                        )
+                    fn ($query) => $query->where(
+                        'occurred_at',
+                        '>=',
+                        $from
+                    )
                 )
                 ->get();
 
@@ -666,11 +642,9 @@ class DashboardService
             ->take(6)
             ->map(
                 fn ($count, $label) => [
-                    'label' =>
-                        $label,
+                    'label' => $label,
 
-                    'count' =>
-                        $count,
+                    'count' => $count,
                 ]
             )
             ->values()
@@ -681,28 +655,23 @@ class DashboardService
         string $period
     ): ?Carbon {
         return match ($period) {
-            '7' =>
-                now()
-                    ->subDays(7)
-                    ->startOfDay(),
+            '7' => now()
+                ->subDays(7)
+                ->startOfDay(),
 
-            '30' =>
-                now()
-                    ->subDays(30)
-                    ->startOfDay(),
+            '30' => now()
+                ->subDays(30)
+                ->startOfDay(),
 
-            '90' =>
-                now()
-                    ->subDays(90)
-                    ->startOfDay(),
+            '90' => now()
+                ->subDays(90)
+                ->startOfDay(),
 
-            'all' =>
-                null,
+            'all' => null,
 
-            default =>
-                now()
-                    ->subDays(30)
-                    ->startOfDay(),
+            default => now()
+                ->subDays(30)
+                ->startOfDay(),
         };
     }
 }

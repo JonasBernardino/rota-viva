@@ -143,9 +143,11 @@ class TenantManager
             return $domainRecord->municipio;
         }
 
-        // Check if domain starts with a municipality slug (e.g. lucena.rotaviva.test or lucena.localhost)
-        $subdomain = explode('.', $normalizedDomain)[0];
-        if (! empty($subdomain) && $subdomain !== 'www' && $subdomain !== 'rotaviva' && $subdomain !== 'localhost' && $subdomain !== '127') {
+        $municipalitySlug = $this->slugFromLocalRotaVivaDomain($normalizedDomain);
+
+        // Check if domain starts with a municipality slug (e.g. lucena.rota-viva.test or lucena.localhost)
+        $subdomain = $municipalitySlug ?? explode('.', $normalizedDomain)[0];
+        if (! empty($subdomain) && $subdomain !== 'www' && $subdomain !== 'rotaviva' && $subdomain !== 'rota-viva' && $subdomain !== 'localhost' && $subdomain !== '127') {
             /** @var Municipio|null $municipio */
             $municipio = Municipio::where('slug', $subdomain)
                 ->where('status', 'active')
@@ -159,6 +161,21 @@ class TenantManager
         // Fallback for local development if only 1 active municipality exists
         if (app()->environment('local', 'testing') && ($normalizedDomain === 'localhost' || $normalizedDomain === '127.0.0.1')) {
             return Municipio::where('status', 'active')->first();
+        }
+
+        return null;
+    }
+
+    private function slugFromLocalRotaVivaDomain(string $domain): ?string
+    {
+        $parts = explode('.', $domain);
+
+        if (
+            count($parts) === 4
+            && $parts[0] === 'rota-viva'
+            && $parts[3] === 'test'
+        ) {
+            return $parts[1];
         }
 
         return null;

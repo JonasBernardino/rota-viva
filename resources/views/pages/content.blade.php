@@ -101,12 +101,36 @@
             @elseif (Route::currentRouteName() === 'privacy')
                 <article class="editorial-content">
                     <h2>Privacidade e Proteção de Dados (LGPD)</h2>
-                    <p>O Rota Viva foi desenvolvido sob o princípio de <em>Privacy by Design</em>, em estrita conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018):</p>
+                    <p>O Rota Viva foi desenvolvido sob o princípio de <em>Privacy by Design</em>, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Coletamos apenas os dados necessários para operar o portal turístico municipal, gerar rotas e apoiar decisões públicas de forma agregada.</p>
+
+                    <h3>Quais dados podem ser coletados</h3>
                     <ul>
-                        <li><strong>Geração Anônima:</strong> Turistas podem criar rotas sem obrigatoriedade de cadastro pessoal ou coleta de CPF.</li>
-                        <li><strong>Geolocalização Voluntária:</strong> O acesso ao GPS do visitante é utilizado exclusivamente no navegador para traçar trajetos e nunca é gravado no servidor.</li>
-                        <li><strong>Transparência Governamental:</strong> Os dados gerados são consolidados de forma agregada e anônima para geração de mapas de calor e políticas públicas de turismo.</li>
+                        <li><strong>Visitantes:</strong> preferências de roteiro informadas voluntariamente, como interesses, faixa de orçamento, faixa de duração, companhia, transporte e requisitos de acessibilidade.</li>
+                        <li><strong>Gestores:</strong> nome, e-mail e credenciais de acesso ao painel administrativo.</li>
+                        <li><strong>Empreendedores:</strong> dados do empreendimento e contato do responsável enviados para análise municipal.</li>
+                        <li><strong>Dados técnicos:</strong> registros mínimos de segurança, como data/hora, IP em logs administrativos e identificador temporário de sessão para métricas agregadas.</li>
                     </ul>
+
+                    <h3>Para quais finalidades usamos os dados</h3>
+                    <ul>
+                        <li>gerar e adaptar rotas turísticas;</li>
+                        <li>validar conteúdos oficiais do município;</li>
+                        <li>analisar solicitações de empreendedores antes da publicação;</li>
+                        <li>proteger o painel administrativo contra acessos indevidos;</li>
+                        <li>produzir indicadores agregados para planejamento turístico.</li>
+                    </ul>
+
+                    <h3>Dados analíticos agregados</h3>
+                    <p>O painel da gestão municipal não deve rastrear individualmente turistas. Orçamentos e duração são tratados por faixas, e os indicadores exibidos são consolidados por volume, categoria, interesse, região ou período.</p>
+
+                    <h3>Geolocalização</h3>
+                    <p>Quando o navegador solicitar localização, o uso é voluntário. A posição pode ser usada no dispositivo para visualização de mapa e orientação, mas o sistema não registra trilhas individuais de deslocamento do turista.</p>
+
+                    <h3>Uso de inteligência artificial</h3>
+                    <p>A IA apoia interpretação e explicação das rotas, sempre com base nos dados cadastrados e validados pelo município. A IA não deve inventar locais, horários, preços ou informações oficiais.</p>
+
+                    <h3>Retenção e direitos do titular</h3>
+                    <p>Dados administrativos e de auditoria são mantidos pelo período necessário para segurança, prestação de contas e obrigação legal. O titular pode solicitar confirmação de tratamento, acesso, correção ou eliminação quando cabível pelo e-mail <a href="mailto:{{ $contactEmail }}">{{ $contactEmail }}</a>.</p>
                 </article>
 
             @else

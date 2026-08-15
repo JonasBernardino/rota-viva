@@ -41,6 +41,7 @@ class LucenaDemoSeeder extends Seeder
                     'emergency_phone' => '(83) 3293-1000',
                 ],
             ], [
+                'rota-viva.lucena.test',
                 'lucena.rota-viva.test',
                 'lucena.rotaviva.com.br',
                 'localhost',

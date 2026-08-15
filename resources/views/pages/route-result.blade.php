@@ -85,6 +85,8 @@
 
         <div class="page-container">
 
+            @include('partials.ai-disclaimer')
+
             <div class="route-result-layout">
 
 

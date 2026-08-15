@@ -145,11 +145,45 @@ class AppServiceProvider extends ServiceProvider
                     ? 'public.municipios'
                     : 'municipios';
 
+                $domainsTable = DB::connection()->getDriverName() === 'pgsql'
+                    ? 'public.dominios_municipios'
+                    : 'dominios_municipios';
+
                 if (Schema::hasTable('municipios') || DB::connection()->getDriverName() === 'pgsql') {
                     $municipalityOptions = DB::table($municipalitiesTable)
+                        ->leftJoin($domainsTable, function ($join) use ($municipalitiesTable, $domainsTable): void {
+                            $join->on($domainsTable.'.municipio_id', '=', $municipalitiesTable.'.id')
+                                ->where($domainsTable.'.is_principal', true);
+                        })
                         ->where('status', 'active')
                         ->orderBy('nome')
-                        ->get(['id', 'nome', 'slug']);
+                        ->get([
+                            $municipalitiesTable.'.id',
+                            $municipalitiesTable.'.nome',
+                            $municipalitiesTable.'.slug',
+                            $domainsTable.'.dominio',
+                        ]);
+
+                    $request = request();
+                    $currentHost = strtolower($request->getHost());
+                    $usesLocalTestDomain = $currentHost === 'rota-viva.test'
+                        || str_ends_with($currentHost, '.rota-viva.test')
+                        || str_starts_with($currentHost, 'rota-viva.')
+                        || str_ends_with($currentHost, '.test');
+
+                    $municipalityOptions = $municipalityOptions->map(function ($municipality) use ($request, $usesLocalTestDomain) {
+                        $domain = $municipality->dominio;
+
+                        if ($usesLocalTestDomain) {
+                            $domain = 'rota-viva.'.$municipality->slug.'.test';
+                        }
+
+                        $municipality->public_url = $domain
+                            ? $request->getScheme().'://'.$domain
+                            : url('/municipios/selecionar?municipality='.$municipality->slug);
+
+                        return $municipality;
+                    });
                 }
             } catch (\Throwable) {
                 $municipalityOptions = collect();

@@ -42,6 +42,7 @@
                 <li><a class="dropdown-item" href="{{ route('tours.index') }}">Passeios</a></li>
                 <li><a class="dropdown-item" href="{{ route('guides.index') }}">Guias turísticos</a></li>
                 <li><a class="dropdown-item" href="{{ route('official-itineraries.index') }}">Roteiros oficiais</a></li>
+                <li><a class="dropdown-item" href="{{ route('entrepreneurs.create') }}">Cadastrar empreendimento</a></li>
             </ul>
         </li>
         <li class="nav-item"><a class="nav-link" href="{{ route('agenda.index') }}">Agenda</a></li>

@@ -56,7 +56,7 @@
 
                     <label class="admin-form__full">
                         Domínio ou subdomínio
-                        <input name="dominio" value="{{ old('dominio') }}" required placeholder="cabedelo.rota-viva.test">
+                        <input name="dominio" value="{{ old('dominio') }}" required placeholder="rota-viva.cabedelo.test">
                     </label>
                 </div>
 

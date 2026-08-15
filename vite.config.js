@@ -15,6 +15,17 @@ export default defineConfig({
         }),
     ],
     server: {
+        host: 'localhost',
+        hmr: {
+            host: 'localhost',
+        },
+        allowedHosts: [
+            'localhost',
+            '127.0.0.1',
+            'rota-viva.test',
+            '.rota-viva.test',
+            '.test',
+        ],
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },

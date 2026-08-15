@@ -8,6 +8,7 @@ use App\Http\Controllers\Platform\PlatformController;
 use App\Http\Controllers\Public\AdaptationController;
 use App\Http\Controllers\Public\CatalogController;
 use App\Http\Controllers\Public\CityMapController;
+use App\Http\Controllers\Public\EntrepreneurController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ItineraryController;
 use App\Http\Controllers\Public\MunicipalityController;
@@ -136,6 +137,18 @@ Route::get(
     '/mapa-da-cidade',
     CityMapController::class
 )->name('city-map');
+
+Route::get(
+    '/empreendedores',
+    [EntrepreneurController::class, 'create']
+)->name('entrepreneurs.create');
+
+Route::post(
+    '/empreendedores',
+    [EntrepreneurController::class, 'store']
+)
+    ->middleware('throttle:route-generation')
+    ->name('entrepreneurs.store');
 
 /*
 |--------------------------------------------------------------------------

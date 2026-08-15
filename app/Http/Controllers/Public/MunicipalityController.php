@@ -57,6 +57,11 @@ class MunicipalityController extends Controller
             ->map(fn (string $domain): string => strtolower($domain))
             ->values();
 
+        $localRotaVivaDomain = 'rota-viva.'.$municipalitySlug.'.test';
+        if ($this->isLocalTestHost($currentHost) && $domains->contains($localRotaVivaDomain)) {
+            return $localRotaVivaDomain;
+        }
+
         if ($domains->contains($currentHost) && str_starts_with($currentHost, $municipalitySlug.'.')) {
             return $currentHost;
         }
@@ -83,6 +88,14 @@ class MunicipalityController extends Controller
         }
 
         return $domains->first();
+    }
+
+    private function isLocalTestHost(string $host): bool
+    {
+        return $host === 'rota-viva.test'
+            || str_ends_with($host, '.rota-viva.test')
+            || str_starts_with($host, 'rota-viva.')
+            || str_ends_with($host, '.test');
     }
 
     private function platformTable(string $table): string
