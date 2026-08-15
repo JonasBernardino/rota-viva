@@ -3,6 +3,7 @@ import "../css/app.css";
 import * as bootstrap from "bootstrap";
 import { initializeRouteMaps } from "./maps/route-map";
 import { initializeHeatmap } from "./dashboard/heatmap";
+import './route.builder';
 
 window.bootstrap = bootstrap;
 

@@ -2,33 +2,33 @@
 
 namespace App\Services\Itinerary;
 
-use App\Contracts\PlaceRepository;
+use App\Contracts\AtrativoRepository;
 use App\DTOs\GeneratedItineraryDTO;
 use App\DTOs\ItineraryStopDTO;
 use App\DTOs\VisitorPreferencesDTO;
-use App\Models\Place;
+use App\Models\Atrativo;
 use Carbon\Carbon;
 use RuntimeException;
 
 class ItineraryService
 {
     public function __construct(
-        private readonly PlaceRepository $places,
+        private readonly AtrativoRepository $places,
     ) {}
 
     public function generate(
         VisitorPreferencesDTO $preferences
     ): GeneratedItineraryDTO {
-        $places = $this->places->getAvailablePlaces();
+        $places = $this->places->available();
 
         $candidates = $places
             ->filter(
-                fn (Place $place) => $this->passesRequiredFilters(
+                fn (Atrativo $place) => $this->passesRequiredFilters(
                     $place,
                     $preferences
                 )
             )
-            ->map(fn (Place $place) => [
+            ->map(fn (Atrativo $place) => [
                 'place' => $place,
                 'score' => $this->calculateScore(
                     $place,
@@ -52,7 +52,7 @@ class ItineraryService
         $currentTime = Carbon::now();
 
         foreach ($candidates as $candidate) {
-            /** @var Place $place */
+            /** @var Atrativo $place */
             $place = $candidate['place'];
 
             $newDuration =
@@ -88,7 +88,7 @@ class ItineraryService
             $selected[] = new ItineraryStopDTO(
                 placeId: $place->id,
                 name: $place->name,
-                category: $place->category?->name ?? 'Experiência',
+                category: $place->category?->nome ?? $place->category?->name ?? 'Experiência',
                 durationMinutes: $place->duration_minutes,
                 estimatedCost: $place->average_cost,
                 latitude: $place->latitude,
@@ -99,19 +99,13 @@ class ItineraryService
 
             $totalDuration = $newDuration;
             $totalCost = $newCost;
-
-            if (count($selected) >= 5) {
-                break;
-            }
         }
 
-        if (empty($selected)) {
+        if ($selected === []) {
             throw new RuntimeException(
-                'Não encontramos uma rota compatível com as preferências informadas.'
+                'Não foi possível encontrar atrativos compatíveis com os critérios informados.'
             );
         }
-
-        $selected = $this->orderByProximity($selected);
 
         return new GeneratedItineraryDTO(
             stops: $selected,
@@ -121,13 +115,9 @@ class ItineraryService
     }
 
     private function passesRequiredFilters(
-        Place $place,
+        Atrativo $place,
         VisitorPreferencesDTO $preferences
     ): bool {
-        if (! $place->is_available) {
-            return false;
-        }
-
         if (
             $preferences->hasChildren === true
             && ! $place->suitable_for_children
@@ -135,49 +125,18 @@ class ItineraryService
             return false;
         }
 
-        if (
-            $preferences->budget !== null
-            && $place->average_cost > $preferences->budget
-        ) {
-            return false;
-        }
+        if ($preferences->accessibilityRequirements !== []) {
+            $placeFeatures = $place
+                ->recursosAcessibilidade
+                ->pluck('slug')
+                ->all();
 
-        if (
-            $preferences->availableMinutes !== null
-            && $place->duration_minutes
-                > $preferences->availableMinutes
-        ) {
-            return false;
-        }
-
-        if (
-            ! $this->supportsAccessibility(
-                $place,
-                $preferences->accessibilityRequirements
-            )
-        ) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private function supportsAccessibility(
-        Place $place,
-        array $requirements
-    ): bool {
-        if (empty($requirements)) {
-            return true;
-        }
-
-        $available = $place
-            ->accessibilityFeatures
-            ->pluck('slug')
-            ->all();
-
-        foreach ($requirements as $requirement) {
-            if (! in_array($requirement, $available, true)) {
-                return false;
+            foreach (
+                $preferences->accessibilityRequirements as $requiredFeature
+            ) {
+                if (! in_array($requiredFeature, $placeFeatures, true)) {
+                    return false;
+                }
             }
         }
 
@@ -185,131 +144,66 @@ class ItineraryService
     }
 
     private function calculateScore(
-        Place $place,
+        Atrativo $place,
         VisitorPreferencesDTO $preferences
-    ): int {
-        $score = 0;
+    ): float {
+        $score = 0.0;
 
-        $tags = collect($place->tags ?? [])
-            ->map(fn ($tag) => mb_strtolower($tag));
+        $categorySlug = $place->categoria?->slug ?? $place->category?->slug ?? '';
 
-        $category = mb_strtolower(
-            $place->category?->slug ?? ''
-        );
+        if (
+            in_array(
+                $categorySlug,
+                $preferences->interests,
+                true
+            )
+        ) {
+            $score += 30.0;
+        }
 
         foreach ($preferences->interests as $interest) {
-            $interest = mb_strtolower($interest);
-
             if (
-                $tags->contains($interest)
-                || $category === $interest
+                in_array(
+                    $interest,
+                    $place->tags ?? [],
+                    true
+                )
             ) {
-                $score += 25;
+                $score += 15.0;
             }
         }
 
         foreach ($preferences->moods as $mood) {
             if (
-                $tags->contains(
-                    mb_strtolower($mood)
+                in_array(
+                    $mood,
+                    $place->tags ?? [],
+                    true
                 )
             ) {
-                $score += 15;
+                $score += 10.0;
             }
-        }
-
-        if (
-            $preferences->hasChildren === true
-            && $place->suitable_for_children
-        ) {
-            $score += 15;
         }
 
         if (
             $preferences->intensity !== null
-            && $place->intensity
-                === $preferences->intensity
+            && $place->intensidade === $preferences->intensity
         ) {
-            $score += 10;
+            $score += 10.0;
         }
 
         if (
             $preferences->budget !== null
-            && $place->average_cost
-                <= ($preferences->budget * 0.30)
+            && $preferences->budget > 0
         ) {
-            $score += 10;
-        }
+            $costProportion =
+                $place->average_cost / $preferences->budget;
 
-        if (! $place->is_outdoor) {
-            $score += 2;
+            if ($costProportion <= 0.3) {
+                $score += 10.0;
+            }
         }
 
         return $score;
-    }
-
-    private function orderByProximity(
-        array $stops
-    ): array {
-        if (count($stops) <= 2) {
-            return $stops;
-        }
-
-        $ordered = [
-            array_shift($stops),
-        ];
-
-        while (! empty($stops)) {
-            $current = end($ordered);
-
-            $closestIndex = null;
-            $closestDistance = PHP_FLOAT_MAX;
-
-            foreach ($stops as $index => $stop) {
-                $distance = $this->distance(
-                    $current,
-                    $stop
-                );
-
-                if ($distance < $closestDistance) {
-                    $closestDistance = $distance;
-                    $closestIndex = $index;
-                }
-            }
-
-            $ordered[] = $stops[$closestIndex];
-
-            unset($stops[$closestIndex]);
-
-            $stops = array_values($stops);
-        }
-
-        return $ordered;
-    }
-
-    private function distance(
-        ItineraryStopDTO $a,
-        ItineraryStopDTO $b
-    ): float {
-        $earthRadius = 6371;
-
-        $latFrom = deg2rad($a->latitude);
-        $lonFrom = deg2rad($a->longitude);
-
-        $latTo = deg2rad($b->latitude);
-        $lonTo = deg2rad($b->longitude);
-
-        $latDelta = $latTo - $latFrom;
-        $lonDelta = $lonTo - $lonFrom;
-
-        $value =
-            sin($latDelta / 2) ** 2
-            + cos($latFrom)
-            * cos($latTo)
-            * sin($lonDelta / 2) ** 2;
-
-        return 2
-            * $earthRadius
-            * asin(min(1, sqrt($value)));
     }
 }

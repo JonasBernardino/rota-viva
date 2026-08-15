@@ -11,17 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('place_media', function (Blueprint $table): void {
+        Schema::create('midias_atrativos', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('place_id')->constrained('places')->cascadeOnDelete();
-            $table->string('media_type')->default('image')->comment('image, video, audio, panorama_360, drone');
+            $table->foreignId('atrativo_id')->constrained('atrativos')->cascadeOnDelete();
+            $table->string('tipo')->default('image'); // image, video, virtual_tour
             $table->string('url');
-            $table->string('thumbnail_url')->nullable();
-            $table->string('caption')->nullable();
-            $table->string('author')->nullable();
-            $table->string('license_info')->nullable();
-            $table->boolean('is_cover')->default(false);
-            $table->integer('display_order')->default(0);
+            $table->string('titulo')->nullable();
+            $table->text('descricao_acessibilidade')->nullable();
+            $table->string('autor')->nullable();
+            $table->boolean('is_destaque')->default(false);
+            $table->unsignedInteger('ordem')->default(0);
             $table->timestamps();
         });
     }
@@ -31,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('place_media');
+        Schema::dropIfExists('midias_atrativos');
     }
 };

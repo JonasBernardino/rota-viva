@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\Business;
-use App\Models\Event;
-use App\Models\Itinerary;
-use App\Models\Place;
+use App\Models\Atrativo;
+use App\Models\Estabelecimento;
+use App\Models\Evento;
+use App\Models\Roteiro;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -41,6 +41,7 @@ class CatalogController extends Controller
         $config = $this->getSectionConfig($section);
 
         $item = $this->fetchSingleItem($section, $slug);
+        abort_if(! $item, 404);
 
         return view('pages.detail', [
             'section' => $section,
@@ -115,42 +116,42 @@ class CatalogController extends Controller
     private function fetchItemsForSection(string $section)
     {
         return match ($section) {
-            'tourist-spots' => Place::with(['category', 'accessibilityFeatures', 'schedules'])
-                ->where('is_available', true)
+            'tourist-spots' => Atrativo::with(['categoria', 'recursosAcessibilidade', 'horarios'])
+                ->where('is_disponivel', true)
                 ->get(),
 
-            'culture' => Place::whereHas('category', function ($query): void {
+            'culture' => Atrativo::whereHas('categoria', function ($query): void {
                 $query->whereIn('slug', ['patrimonio-historico', 'cultura-e-tradicao']);
             })
-                ->with(['category', 'accessibilityFeatures'])
+                ->with(['categoria', 'recursosAcessibilidade'])
                 ->get(),
 
-            'tours' => Business::whereIn('business_type', ['activity', 'tour_guide'])
-                ->where('validation_status', 'approved')
+            'tours' => Estabelecimento::whereIn('tipo_estabelecimento', ['atividade', 'guia_turistico', 'activity', 'tour_guide'])
+                ->where('status_validacao', 'approved')
                 ->get(),
 
-            'guides' => Business::where('business_type', 'tour_guide')
-                ->where('validation_status', 'approved')
+            'guides' => Estabelecimento::whereIn('tipo_estabelecimento', ['guia_turistico', 'tour_guide'])
+                ->where('status_validacao', 'approved')
                 ->get(),
 
-            'official-itineraries' => Itinerary::where('status', 'official')
-                ->orWhere('title', 'like', 'Roteiro%')
-                ->with(['items.place.category'])
+            'official-itineraries' => Roteiro::where('status', 'official')
+                ->orWhere('titulo', 'like', 'Roteiro%')
+                ->with(['itens.atrativo.categoria'])
                 ->get(),
 
-            'stays' => Business::where('business_type', 'lodging')
-                ->where('validation_status', 'approved')
+            'stays' => Estabelecimento::whereIn('tipo_estabelecimento', ['hospedagem', 'lodging'])
+                ->where('status_validacao', 'approved')
                 ->get(),
 
-            'dining' => Business::where('business_type', 'gastronomy')
-                ->where('validation_status', 'approved')
+            'dining' => Estabelecimento::whereIn('tipo_estabelecimento', ['gastronomia', 'gastronomy'])
+                ->where('status_validacao', 'approved')
                 ->get(),
 
-            'agenda' => Event::where('status', 'scheduled')
-                ->orderBy('starts_at')
+            'agenda' => Evento::where('status', 'scheduled')
+                ->orderBy('inicia_em')
                 ->get(),
 
-            default => Place::all(),
+            default => Atrativo::all(),
         };
     }
 
@@ -160,22 +161,22 @@ class CatalogController extends Controller
     private function fetchSingleItem(string $section, string $slug): mixed
     {
         return match ($section) {
-            'tourist-spots', 'culture' => Place::where('slug', $slug)
-                ->with(['category', 'accessibilityFeatures', 'schedules'])
+            'tourist-spots', 'culture' => Atrativo::where('slug', $slug)
+                ->with(['categoria', 'recursosAcessibilidade', 'horarios'])
                 ->first(),
 
-            'stays', 'dining', 'guides', 'tours' => Business::where('slug', $slug)
+            'stays', 'dining', 'guides', 'tours' => Estabelecimento::where('slug', $slug)
                 ->first(),
 
-            'agenda' => Event::where('slug', $slug)
+            'agenda' => Evento::where('slug', $slug)
                 ->first(),
 
-            'official-itineraries' => Itinerary::where('title', 'like', '%'.str_replace('-', ' ', $slug).'%')
+            'official-itineraries' => Roteiro::where('titulo', 'like', '%'.str_replace('-', ' ', $slug).'%')
                 ->orWhere('id', is_numeric($slug) ? (int) $slug : 0)
-                ->with(['items.place.category'])
-                ->first() ?? Itinerary::with(['items.place.category'])->first(),
+                ->with(['itens.atrativo.categoria'])
+                ->first() ?? Roteiro::with(['itens.atrativo.categoria'])->first(),
 
-            default => Place::where('slug', $slug)->first(),
+            default => Atrativo::where('slug', $slug)->first(),
         };
     }
 }

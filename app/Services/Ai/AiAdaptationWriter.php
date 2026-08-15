@@ -5,7 +5,7 @@ namespace App\Services\Ai;
 use App\Contracts\AiProvider;
 use App\DTOs\AdaptationNarrativeDTO;
 use App\DTOs\AdaptedItineraryDTO;
-use App\Models\Itinerary;
+use App\Models\Roteiro;
 use Throwable;
 
 class AiAdaptationWriter
@@ -15,7 +15,7 @@ class AiAdaptationWriter
     ) {}
 
     public function explainRainAdaptation(
-        Itinerary $original,
+        Roteiro $original,
         AdaptedItineraryDTO $adapted
     ): AdaptationNarrativeDTO {
         try {
@@ -71,7 +71,7 @@ PROMPT;
     }
 
     private function buildPrompt(
-        Itinerary $original,
+        Roteiro $original,
         AdaptedItineraryDTO $adapted
     ): string {
         $original->loadMissing(

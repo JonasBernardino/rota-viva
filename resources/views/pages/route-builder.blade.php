@@ -39,18 +39,28 @@
 
                 </div>
             @endif
-            <form action="{{ route('routes.store') }}" method="post">
+            <form action="{{ route('routes.store') }}" method="post" data-route-builder-form>
                 @csrf
                 <label for="experience-query">Conte o que você
                     procura</label>
                 <textarea id="experience-query" name="description" rows="7"
-                    placeholder="Ex.: Quero cultura e tranquilidade, estou com uma criança e tenho quatro horas.">
-                    {{ old('description', $initialQuery ?? '') }}
-                </textarea>
-                <button class="route-cta" type="submit">
-                    Continuar
+                    placeholder="Ex.: Quero cultura e tranquilidade, estou com uma criança e tenho quatro horas.">{{ old('description', $initialQuery ?? '') }}</textarea>
+                <p class="route-builder-status" data-route-builder-status hidden role="status">
+                    Estamos criando sua rota. Se a IA local demorar, usamos uma interpretação segura pelo próprio sistema.
+                </p>
+                <button class="route-cta" type="submit" data-route-builder-submit>
+                    <span data-route-builder-submit-label>Continuar</span>
                 </button>
             </form>
         </div>
     </section>
+
+    <div class="route-builder-loading" data-route-builder-loading hidden role="status" aria-live="polite">
+        <div class="route-builder-loading__panel">
+            <span class="route-builder-loading__spinner" aria-hidden="true"></span>
+            <p class="eyebrow">Rota Viva em movimento</p>
+            <strong>Criando sua experiência personalizada</strong>
+            <span>Estamos avaliando tempo, orçamento, perfil e atrativos oficiais do município.</span>
+        </div>
+    </div>
 @endsection

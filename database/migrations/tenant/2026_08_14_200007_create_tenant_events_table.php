@@ -11,25 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table): void {
+        Schema::create('eventos', function (Blueprint $table): void {
             $table->id();
-            $table->string('name');
+            $table->string('nome');
             $table->string('slug')->unique();
-            $table->text('description');
-            $table->string('location_name');
-            $table->string('address')->nullable();
+            $table->text('descricao');
+            $table->string('nome_local');
+            $table->string('endereco')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            $table->dateTime('starts_at')->index();
-            $table->dateTime('ends_at')->nullable();
-            $table->boolean('is_free')->default(true);
-            $table->decimal('price', 10, 2)->nullable();
-            $table->boolean('is_accessible')->default(true);
-            $table->string('category')->default('cultural');
-            $table->string('organizer')->nullable();
-            $table->integer('capacity')->nullable();
+            $table->dateTime('inicia_em')->index();
+            $table->dateTime('termina_em')->nullable();
+            $table->boolean('is_gratuito')->default(true);
+            $table->decimal('preco', 10, 2)->nullable();
+            $table->boolean('is_acessivel')->default(true);
+            $table->string('categoria')->default('cultural');
+            $table->string('organizador')->nullable();
+            $table->integer('capacidade')->nullable();
             $table->string('status')->default('scheduled');
-            $table->string('image_url')->nullable();
+            $table->string('imagem_url')->nullable();
             $table->timestamps();
         });
     }
@@ -39,6 +39,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('events');
+        Schema::dropIfExists('eventos');
     }
 };

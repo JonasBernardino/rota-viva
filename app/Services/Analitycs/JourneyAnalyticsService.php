@@ -5,9 +5,9 @@ namespace App\Services\Analytics;
 use App\DTOs\AdaptedItineraryDTO;
 use App\DTOs\VisitorPreferencesDTO;
 use App\Enums\JourneyEventType;
-use App\Models\Itinerary;
+use App\Models\Roteiro;
 use App\Models\JourneyEvent;
-use App\Models\RouteAdaptation;
+use App\Models\AdaptacaoRota;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -29,7 +29,7 @@ class JourneyAnalyticsService
     }
 
     public function trackRouteCreated(
-        Itinerary $itinerary,
+        Roteiro $itinerary,
         VisitorPreferencesDTO $preferences
     ): void {
         $this->record(
@@ -67,7 +67,7 @@ class JourneyAnalyticsService
     }
 
     public function trackRouteAdapted(
-        RouteAdaptation $adaptation,
+        AdaptacaoRota $adaptation,
         AdaptedItineraryDTO $adapted
     ): void {
         $this->record(

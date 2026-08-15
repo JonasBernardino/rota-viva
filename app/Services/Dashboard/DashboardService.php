@@ -3,9 +3,9 @@
 namespace App\Services\Dashboard;
 
 use App\Enums\JourneyEventType;
-use App\Models\Itinerary;
+use App\Models\Roteiro;
 use App\Models\JourneyEvent;
-use App\Models\RouteAdaptation;
+use App\Models\AdaptacaoRota;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -64,7 +64,7 @@ class DashboardService
         ?Carbon $from
     ): array {
         $itineraries =
-            Itinerary::query()
+            Roteiro::query()
                 ->when(
                     $from,
                     fn ($query) =>
@@ -76,7 +76,7 @@ class DashboardService
                 );
 
         $adaptations =
-            RouteAdaptation::query()
+            AdaptacaoRota::query()
                 ->when(
                     $from,
                     fn ($query) =>

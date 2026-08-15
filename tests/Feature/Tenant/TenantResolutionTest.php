@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Tenant;
 
-use App\Models\Category;
-use App\Models\Municipality;
-use App\Models\Place;
+use App\Models\Atrativo;
+use App\Models\Categoria;
+use App\Models\Municipio;
 use App\Services\Tenant\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +16,7 @@ class TenantResolutionTest extends TestCase
 
     protected TenantManager $tenantManager;
 
-    protected Municipality $lucena;
+    protected Municipio $lucena;
 
     protected function setUp(): void
     {
@@ -27,7 +27,7 @@ class TenantResolutionTest extends TestCase
         // Seed demo data
         $this->seed();
 
-        $this->lucena = Municipality::where('slug', 'lucena')->firstOrFail();
+        $this->lucena = Municipio::where('slug', 'lucena')->firstOrFail();
     }
 
     public function test_it_resolves_active_tenant_by_host_domain(): void
@@ -36,7 +36,7 @@ class TenantResolutionTest extends TestCase
             ->get(route('home'));
 
         $response->assertOk();
-        $response->assertViewHas('currentTenant', fn (?Municipality $tenant) => $tenant?->slug === 'lucena');
+        $response->assertViewHas('currentTenant', fn (?Municipio $tenant) => $tenant?->slug === 'lucena');
     }
 
     public function test_it_resolves_tenant_by_x_tenant_header(): void
@@ -45,7 +45,7 @@ class TenantResolutionTest extends TestCase
             ->get(route('home'));
 
         $response->assertOk();
-        $response->assertViewHas('currentTenant', fn (?Municipality $tenant) => $tenant?->slug === 'lucena');
+        $response->assertViewHas('currentTenant', fn (?Municipio $tenant) => $tenant?->slug === 'lucena');
     }
 
     public function test_it_isolates_data_between_tenant_schemas(): void
@@ -56,49 +56,53 @@ class TenantResolutionTest extends TestCase
 
         // 1. Check Lucena has places from seeder
         $this->tenantManager->switchTo($this->lucena);
-        $lucenaPlaceCount = Place::count();
+        $lucenaPlaceCount = Atrativo::count();
         $this->assertGreaterThan(0, $lucenaPlaceCount);
-        $this->assertTrue(Place::where('slug', 'igreja-nossa-senhora-da-guia')->exists());
+        $this->assertTrue(Atrativo::where('slug', 'igreja-nossa-senhora-da-guia')->exists());
 
         // 2. Create second municipality: Cabedelo
         $cabedelo = $this->tenantManager->createTenant([
-            'name' => 'Cabedelo',
+            'nome' => 'Cabedelo',
             'slug' => 'cabedelo',
-            'ibge_code' => '2503201',
-            'state' => 'PB',
-            'schema_name' => 'tenant_cabedelo',
+            'codigo_ibge' => '2503201',
+            'uf' => 'PB',
+            'nome_schema' => 'tenant_cabedelo',
             'status' => 'active',
-            'timezone' => 'America/Fortaleza',
+            'fuso_horario' => 'America/Fortaleza',
         ], ['cabedelo.rotaviva.com.br']);
 
         // 3. Switch to Cabedelo schema
         $this->tenantManager->switchTo($cabedelo);
-        $this->assertSame(0, Place::count());
-        $this->assertFalse(Place::where('slug', 'igreja-nossa-senhora-da-guia')->exists());
+        $this->assertSame(0, Atrativo::count());
+        $this->assertFalse(Atrativo::where('slug', 'igreja-nossa-senhora-da-guia')->exists());
 
         // 4. Insert place in Cabedelo
-        $cat = Category::create([
-            'name' => 'Histórico Cabedelo',
+        $cat = Categoria::create([
+            'nome' => 'Histórico Cabedelo',
             'slug' => 'historico-cabedelo',
         ]);
 
-        Place::create([
-            'category_id' => $cat->id,
-            'name' => 'Fortaleza de Santa Catarina',
+        Atrativo::create([
+            'categoria_id' => $cat->id,
+            'nome' => 'Fortaleza de Santa Catarina',
             'slug' => 'fortaleza-santa-catarina',
-            'description' => 'Forte histórico em Cabedelo.',
-            'is_indoor' => false,
-            'is_free' => false,
-            'cost' => 15.00,
+            'descricao' => 'Forte histórico em Cabedelo.',
+            'duracao_minutos' => 60,
+            'custo_medio' => 15.00,
+            'is_ar_livre' => false,
+            'adequado_criancas' => true,
+            'latitude' => -7.0200000,
+            'longitude' => -34.8300000,
+            'is_disponivel' => true,
         ]);
 
-        $this->assertSame(1, Place::count());
-        $this->assertTrue(Place::where('slug', 'fortaleza-santa-catarina')->exists());
+        $this->assertSame(1, Atrativo::count());
+        $this->assertTrue(Atrativo::where('slug', 'fortaleza-santa-catarina')->exists());
 
         // 5. Switch back to Lucena and verify Cabedelo place is NOT present
         $this->tenantManager->switchTo($this->lucena);
-        $this->assertSame($lucenaPlaceCount, Place::count());
-        $this->assertFalse(Place::where('slug', 'fortaleza-santa-catarina')->exists());
+        $this->assertSame($lucenaPlaceCount, Atrativo::count());
+        $this->assertFalse(Atrativo::where('slug', 'fortaleza-santa-catarina')->exists());
 
         // Cleanup second schema
         $this->tenantManager->dropSchema('tenant_cabedelo');

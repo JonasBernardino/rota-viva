@@ -6,78 +6,41 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('route_adaptations', function (Blueprint $table) {
+        Schema::create('adaptacoes_rota', function (Blueprint $table): void {
             $table->id();
-
-            $table
-                ->foreignId('itinerary_id')
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->string('event');
-
-            $table->string('title');
-            $table->text('summary');
-
-            $table->unsignedInteger(
-                'total_duration_minutes'
-            );
-
-            $table->decimal(
-                'total_estimated_cost',
-                10,
-                2
-            );
-
+            $table->foreignId('roteiro_id')->constrained('roteiros')->cascadeOnDelete();
+            $table->string('evento'); // Ex: RAIN_STARTED
+            $table->string('titulo');
+            $table->text('resumo');
+            $table->unsignedInteger('duracao_total_minutos');
+            $table->decimal('custo_total_estimado', 10, 2);
             $table->timestamps();
         });
 
-        Schema::create(
-            'route_adaptation_items',
-            function (Blueprint $table) {
-                $table->id();
-
-                $table
-                    ->foreignId('route_adaptation_id')
-                    ->constrained()
-                    ->cascadeOnDelete();
-
-                $table
-                    ->foreignId('place_id')
-                    ->constrained()
-                    ->restrictOnDelete();
-
-                $table->unsignedInteger('position');
-
-                $table->string('action');
-
-                $table->unsignedInteger(
-                    'duration_minutes'
-                );
-
-                $table->decimal(
-                    'estimated_cost',
-                    10,
-                    2
-                );
-
-                $table->text('reason');
-
-                $table->timestamps();
-            }
-        );
+        Schema::create('itens_adaptacao_rota', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('adaptacao_rota_id')->constrained('adaptacoes_rota')->cascadeOnDelete();
+            $table->foreignId('atrativo_id')->constrained('atrativos')->cascadeOnDelete();
+            $table->unsignedInteger('posicao');
+            $table->string('acao'); // ADDED, REMOVED, KEPT
+            $table->unsignedInteger('duracao_minutos');
+            $table->decimal('custo_estimado', 10, 2);
+            $table->text('motivo');
+            $table->timestamps();
+        });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists(
-            'route_adaptation_items'
-        );
-
-        Schema::dropIfExists(
-            'route_adaptations'
-        );
+        Schema::dropIfExists('itens_adaptacao_rota');
+        Schema::dropIfExists('adaptacoes_rota');
     }
 };

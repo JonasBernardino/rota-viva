@@ -9,6 +9,13 @@
                     <span>Área do gestor</span>
                 </a>
             @endcan
+
+            <form action="{{ route('logout') }}" method="post" class="logout-form">
+                @csrf
+                <button class="manager-link manager-link--ghost" type="submit">
+                    <span>Sair</span>
+                </button>
+            </form>
         @endauth
     </div>
 

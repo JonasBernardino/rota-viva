@@ -3,24 +3,16 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\Itinerary;
 use App\Services\Ai\AiExperienceWriter;
 use App\Services\Ai\AiPreferenceInterpreter;
+use App\Services\Analytics\JourneyAnalyticsService;
 use App\Services\Itinerary\ItineraryPersistenceService;
 use App\Services\Itinerary\ItineraryService;
 use Illuminate\Http\Request;
 use RuntimeException;
-use App\Services\Analytics\JourneyAnalyticsService;
 
 class ItineraryController extends Controller
 {
-    public function create(Request $request)
-    {
-        return view('pages.route-builder', [
-            'initialQuery' => $request->query('q'),
-        ]);
-    }
-
     public function store(
         Request $request,
         AiPreferenceInterpreter $interpreter,
@@ -29,8 +21,21 @@ class ItineraryController extends Controller
         ItineraryPersistenceService $persistence,
         JourneyAnalyticsService $analytics,
     ) {
+        /*
+        |--------------------------------------------------------------------------
+        | Tempo máximo da geração
+        |--------------------------------------------------------------------------
+        |
+        | Alguns providers de IA podem demorar mais para responder.
+        |
+        */
         set_time_limit(150);
 
+        /*
+        |--------------------------------------------------------------------------
+        | 1. Valida entrada
+        |--------------------------------------------------------------------------
+        */
         $data = $request->validate([
             'description' => [
                 'required',
@@ -41,8 +46,14 @@ class ItineraryController extends Controller
         ]);
 
         /*
-     * 1. Interpretar linguagem natural.
-     */
+        |--------------------------------------------------------------------------
+        | 2. IA interpreta a linguagem natural
+        |--------------------------------------------------------------------------
+        |
+        | A IA transforma a descrição do visitante em preferências
+        | estruturadas que podem ser utilizadas pelo motor de rotas.
+        |
+        */
         try {
             $preferences = $interpreter->interpret(
                 $data['description']
@@ -50,6 +61,14 @@ class ItineraryController extends Controller
         } catch (RuntimeException $exception) {
             report($exception);
 
+            /*
+            |----------------------------------------------------------------------
+            | Analytics: falha de interpretação
+            |----------------------------------------------------------------------
+            |
+            | Não salvamos o texto livre digitado pelo visitante.
+            |
+            */
             $analytics->trackAiInterpretationFailed(
                 $exception->getMessage()
             );
@@ -63,31 +82,50 @@ class ItineraryController extends Controller
         }
 
         /*
-     * 2. Agora conhecemos a demanda.
-     *
-     * Registramos ANTES de tentar gerar uma rota.
-     */
+        |--------------------------------------------------------------------------
+        | 3. Registra a demanda
+        |--------------------------------------------------------------------------
+        |
+        | Neste ponto já conhecemos as preferências estruturadas.
+        |
+        | Registramos a demanda ANTES de tentar montar uma rota.
+        | Isso permite saber não apenas o que foi atendido, mas também
+        | aquilo que os visitantes procuraram e não encontraram.
+        |
+        */
         $analytics->trackRouteRequested(
             $preferences
         );
 
         /*
-     * 3. Motor determinístico.
-     */
+        |--------------------------------------------------------------------------
+        | 4. Laravel seleciona os atrativos
+        |--------------------------------------------------------------------------
+        |
+        | A decisão dos locais que entram na rota continua sendo
+        | determinística e baseada nos dados cadastrados.
+        |
+        | A IA não escolhe os atrativos.
+        |
+        */
         try {
-            $generated =
-                $itineraryService->generate(
-                    $preferences
-                );
+            $generated = $itineraryService->generate(
+                $preferences
+            );
         } catch (RuntimeException $exception) {
             report($exception);
 
             /*
-         * ESTE É O DADO MUITO IMPORTANTE:
-         *
-         * sabemos o que o visitante queria,
-         * mas não conseguimos atendê-lo.
-         */
+            |----------------------------------------------------------------------
+            | Analytics: demanda não atendida
+            |----------------------------------------------------------------------
+            |
+            | Este é um dos dados mais importantes para o painel do gestor.
+            |
+            | Sabemos o que o visitante queria, mas o município não possuía
+            | uma combinação de atrativos capaz de atender aquela demanda.
+            |
+            */
             $analytics->trackRouteNotFound(
                 preferences: $preferences,
                 reason: $exception->getMessage(),
@@ -97,23 +135,43 @@ class ItineraryController extends Controller
                 ->withInput()
                 ->with(
                     'route_error',
-                    'Não encontramos experiências compatíveis com suas preferências neste momento. Tente ajustar tempo, orçamento ou tipo de experiência.'
+                    'Não encontramos atrativos compatíveis com essa busca. Tente informar o tipo de experiência, tempo disponível ou interesse principal, como cultura, natureza ou gastronomia.'
                 );
         }
 
         /*
-     * 4. IA escreve a apresentação.
-     *
-     * O AiExperienceWriter já possui fallback.
-     */
+        |--------------------------------------------------------------------------
+        | 5. IA explica o resultado
+        |--------------------------------------------------------------------------
+        |
+        | A rota já foi escolhida pelo backend.
+        |
+        | Aqui a IA apenas transforma o resultado em uma apresentação
+        | mais natural para o visitante.
+        |
+        | Se o provider de IA falhar, o AiExperienceWriter utiliza
+        | o fallback local que implementamos anteriormente.
+        |
+        */
         $narrative = $writer->write(
             $preferences,
             $generated
         );
 
         /*
-     * 5. Persistência da rota.
-     */
+        |--------------------------------------------------------------------------
+        | 6. Persiste o roteiro
+        |--------------------------------------------------------------------------
+        |
+        | Salvamos:
+        |
+        | - solicitação original;
+        | - preferências interpretadas;
+        | - roteiro;
+        | - itens;
+        | - narrativa apresentada ao visitante.
+        |
+        */
         $itinerary = $persistence->store(
             description: $data['description'],
             preferences: $preferences,
@@ -122,26 +180,44 @@ class ItineraryController extends Controller
         );
 
         /*
-     * 6. Analytics de sucesso.
-     */
+        |--------------------------------------------------------------------------
+        | 7. Analytics: roteiro criado
+        |--------------------------------------------------------------------------
+        |
+        | Agora sabemos que a solicitação foi efetivamente atendida.
+        |
+        */
         $analytics->trackRouteCreated(
             itinerary: $itinerary,
             preferences: $preferences,
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | 8. Exibe o roteiro
+        |--------------------------------------------------------------------------
+        */
         return redirect()->route(
             'routes.show',
             $itinerary
         );
     }
 
-    public function show(
-        Itinerary $itinerary
-    ) {
-        $itinerary->load([
-            'preference',
-            'items.place.category',
-        ]);
+    public function show($itinerary)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Carrega o roteiro
+        |--------------------------------------------------------------------------
+        |
+        | IMPORTANTE:
+        | Este trecho depende dos nomes finais que seu colega definiu
+        | para Models e relacionamentos.
+        |
+        | Se o seu show() atual já está funcionando após a tradução das
+        | entidades, mantenha o show() atual em vez de substituir por este.
+        |
+        */
 
         return view(
             'pages.route-result',

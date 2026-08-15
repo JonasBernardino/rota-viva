@@ -5,8 +5,8 @@ namespace App\Services\Itinerary;
 use App\DTOs\ExperienceNarrativeDTO;
 use App\DTOs\GeneratedItineraryDTO;
 use App\DTOs\VisitorPreferencesDTO;
-use App\Models\Itinerary;
-use App\Models\VisitorPreference;
+use App\Models\PreferenciaVisitante;
+use App\Models\Roteiro;
 use Illuminate\Support\Facades\DB;
 
 class ItineraryPersistenceService
@@ -16,55 +16,46 @@ class ItineraryPersistenceService
         VisitorPreferencesDTO $preferences,
         GeneratedItineraryDTO $generated,
         ExperienceNarrativeDTO $narrative
-    ): Itinerary {
+    ): Roteiro {
         return DB::transaction(function () use (
             $description,
             $preferences,
             $generated,
             $narrative
-        ) {
-            $preference = VisitorPreference::create([
-                'original_description' => $description,
-                'moods' => $preferences->moods,
-                'interests' => $preferences->interests,
-                'available_minutes' => $preferences->availableMinutes,
-                'budget' => $preferences->budget,
-                'has_children' => $preferences->hasChildren,
-                'transport' => $preferences->transport,
-                'accessibility_requirements' => $preferences
-                    ->accessibilityRequirements,
-                'intensity' => $preferences->intensity,
+        ): Roteiro {
+            $preference = PreferenciaVisitante::create([
+                'descricao_original' => $description,
+                'humores' => $preferences->moods,
+                'interesses' => $preferences->interests,
+                'minutos_disponiveis' => $preferences->availableMinutes,
+                'orcamento' => $preferences->budget,
+                'tem_criancas' => $preferences->hasChildren,
+                'transporte' => $preferences->transport,
+                'requisitos_acessibilidade' => $preferences->accessibilityRequirements,
+                'intensidade' => $preferences->intensity,
             ]);
 
-            $itinerary = Itinerary::create([
-                'visitor_preference_id' => $preference->id,
-
-                'title' => $narrative->title,
-                'summary' => $narrative->summary,
-
-                'total_duration_minutes' => $generated->totalDurationMinutes,
-
-                'total_estimated_cost' => $generated->totalEstimatedCost,
-
+            /** @var Roteiro $roteiro */
+            $roteiro = Roteiro::create([
+                'preferencia_visitante_id' => $preference->id,
+                'titulo' => $narrative->title,
+                'resumo' => $narrative->summary,
+                'duracao_total_minutos' => $generated->totalDurationMinutes,
+                'custo_total_estimado' => $generated->totalEstimatedCost,
                 'status' => 'ACTIVE',
             ]);
 
-            foreach (
-                $generated->stops as $position => $stop
-            ) {
-                $itinerary->items()->create([
-                    'place_id' => $stop->placeId,
-                    'position' => $position + 1,
-                    'duration_minutes' => $stop->durationMinutes,
-
-                    'estimated_cost' => $stop->estimatedCost,
-
-                    'reason' => $narrative
-                        ->reasonFor($stop->placeId),
+            foreach ($generated->stops as $position => $stop) {
+                $roteiro->itens()->create([
+                    'atrativo_id' => $stop->placeId,
+                    'posicao' => $position + 1,
+                    'duracao_minutos' => $stop->durationMinutes,
+                    'custo_estimado' => $stop->estimatedCost,
+                    'motivo' => $narrative->reasonFor($stop->placeId),
                 ]);
             }
 
-            return $itinerary;
+            return $roteiro;
         });
     }
 }

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\Itinerary;
-use App\Models\RouteAdaptation;
+use App\Models\AdaptacaoRota;
+use App\Models\Roteiro;
 use App\Services\Adaptation\RouteAdaptationService;
 use App\Services\Ai\AiAdaptationWriter;
 use App\Services\Analytics\JourneyAnalyticsService;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 class AdaptationController extends Controller
 {
     public function rain(
-        Itinerary $itinerary,
+        Roteiro $itinerary,
         RouteAdaptationService $adaptationService,
         AiAdaptationWriter $writer,
         JourneyAnalyticsService $analytics,
@@ -36,13 +36,10 @@ class AdaptationController extends Controller
         | 2. IA explica a adaptação
         |--------------------------------------------------------------------------
         |
-        | A IA NÃO escolhe os novos lugares.
+        | A IA não escolhe os novos atrativos.
         |
         | Ela recebe a rota já recalculada pelo backend
         | e apenas produz título, resumo e explicações.
-        |
-        | O AiAdaptationWriter já possui fallback caso
-        | o provider de IA esteja indisponível.
         |
         */
         $narrative = $writer->explainRainAdaptation(
@@ -55,8 +52,8 @@ class AdaptationController extends Controller
         | 3. Salva adaptação + itens
         |--------------------------------------------------------------------------
         |
-        | Tudo dentro de uma transaction para não termos
-        | uma RouteAdaptation salva pela metade.
+        | Tudo fica dentro de uma transaction para não termos
+        | uma AdaptacaoRota salva pela metade.
         |
         */
         $adaptation = DB::transaction(
@@ -64,33 +61,32 @@ class AdaptationController extends Controller
                 $itinerary,
                 $adapted,
                 $narrative
-            ) {
-                $adaptation = RouteAdaptation::create([
-                    'itinerary_id' =>
+            ): AdaptacaoRota {
+                /** @var AdaptacaoRota $adaptation */
+                $adaptation = AdaptacaoRota::create([
+                    'roteiro_id' =>
                         $itinerary->id,
 
-                    'event' =>
+                    'evento' =>
                         'RAIN_STARTED',
 
-                    'title' =>
+                    'titulo' =>
                         $narrative->title,
 
-                    'summary' =>
+                    'resumo' =>
                         $narrative->summary,
 
-                    'total_duration_minutes' =>
+                    'duracao_total_minutos' =>
                         $adapted->totalDurationMinutes,
 
-                    'total_estimated_cost' =>
+                    'custo_total_estimado' =>
                         $adapted->totalEstimatedCost,
                 ]);
 
                 /*
                 |--------------------------------------------------------------------------
-                | 3.1 Itens que continuam na nova rota
+                | 3.1 Itens mantidos ou adicionados
                 |--------------------------------------------------------------------------
-                |
-                | Aqui entram:
                 |
                 | KEPT  = já existia e permaneceu.
                 | ADDED = entrou como substituição.
@@ -109,24 +105,24 @@ class AdaptationController extends Controller
                         : 'KEPT';
 
                     $adaptation
-                        ->items()
+                        ->itens()
                         ->create([
-                            'place_id' =>
+                            'atrativo_id' =>
                                 $stop->placeId,
 
-                            'position' =>
+                            'posicao' =>
                                 $position + 1,
 
-                            'action' =>
+                            'acao' =>
                                 $action,
 
-                            'duration_minutes' =>
+                            'duracao_minutos' =>
                                 $stop->durationMinutes,
 
-                            'estimated_cost' =>
+                            'custo_estimado' =>
                                 $stop->estimatedCost,
 
-                            'reason' =>
+                            'motivo' =>
                                 $this->findReason(
                                     $narrative->changes,
                                     $stop->placeId
@@ -139,52 +135,50 @@ class AdaptationController extends Controller
                 | 3.2 Itens removidos
                 |--------------------------------------------------------------------------
                 |
-                | Também persistimos os pontos removidos.
+                | Também persistimos os atrativos removidos.
                 |
-                | Isso é importante para:
+                | Isso continua sendo importante para:
                 |
                 | - comparação antes/depois;
                 | - auditoria;
                 | - analytics;
-                | - mapa de calor de pontos removidos.
+                | - mapa de calor de atrativos removidos.
                 |
                 */
                 foreach (
                     $adapted->removedPlaceIds
                     as $removedId
                 ) {
-                    $originalItem = $itinerary
-                        ->items
+                    $original = $itinerary
+                        ->itens
                         ->firstWhere(
-                            'place_id',
+                            'atrativo_id',
                             $removedId
                         );
 
-                    if (!$originalItem) {
+                    if (!$original) {
                         continue;
                     }
 
                     $adaptation
-                        ->items()
+                        ->itens()
                         ->create([
-                            'place_id' =>
+                            'atrativo_id' =>
                                 $removedId,
 
-                            'position' =>
-                                $originalItem->position,
+                            'posicao' =>
+                                $original->posicao,
 
-                            'action' =>
+                            'acao' =>
                                 'REMOVED',
 
-                            'duration_minutes' =>
-                                $originalItem
-                                    ->duration_minutes,
+                            'duracao_minutos' =>
+                                $original->duracao_minutos,
 
-                            'estimated_cost' =>
-                                $originalItem
-                                    ->estimated_cost,
+                            'custo_estimado' =>
+                                $original->custo_estimado,
 
-                            'reason' =>
+                            'motivo' =>
                                 $this->findReason(
                                     $narrative->changes,
                                     $removedId,
@@ -199,15 +193,13 @@ class AdaptationController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 4. Registra analytics
+        | 4. Analytics
         |--------------------------------------------------------------------------
         |
-        | Importante:
+        | Registramos a adaptação depois da transaction principal.
         |
-        | analytics acontece DEPOIS da transaction principal.
-        |
-        | Se analytics falhar, JourneyAnalyticsService captura
-        | internamente o erro e a adaptação continua funcionando.
+        | Se analytics falhar, o JourneyAnalyticsService trata
+        | internamente e não prejudica a jornada do visitante.
         |
         */
         $analytics->trackRouteAdapted(
@@ -217,7 +209,7 @@ class AdaptationController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 5. Redireciona para comparação antes/depois
+        | 5. Redireciona para antes/depois
         |--------------------------------------------------------------------------
         */
         return redirect()->route(
@@ -233,35 +225,28 @@ class AdaptationController extends Controller
     }
 
     public function show(
-        Itinerary $itinerary,
-        RouteAdaptation $adaptation
+        Roteiro $itinerary,
+        AdaptacaoRota $adaptation
     ) {
         /*
         |--------------------------------------------------------------------------
-        | Segurança básica de vínculo
+        | Garante vínculo entre roteiro e adaptação
         |--------------------------------------------------------------------------
-        |
-        | Evita alguém acessar algo como:
-        |
-        | /minha-rota/1/adaptacoes/99
-        |
-        | quando a adaptação 99 pertence a outra rota.
-        |
         */
         abort_unless(
-            $adaptation->itinerary_id
+            $adaptation->roteiro_id
                 === $itinerary->id,
             404
         );
 
         /*
         |--------------------------------------------------------------------------
-        | Carrega rota original
+        | Carrega roteiro original
         |--------------------------------------------------------------------------
         */
         $itinerary->load([
-            'preference',
-            'items.place.category',
+            'preferencia',
+            'itens.atrativo.categoria',
         ]);
 
         /*
@@ -270,7 +255,7 @@ class AdaptationController extends Controller
         |--------------------------------------------------------------------------
         */
         $adaptation->load([
-            'items.place.category',
+            'itens.atrativo.categoria',
         ]);
 
         return view(
