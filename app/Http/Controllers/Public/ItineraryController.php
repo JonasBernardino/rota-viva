@@ -55,9 +55,13 @@ class ItineraryController extends Controller
             'description' => [
                 'required',
                 'string',
-                'min:10',
+                'min:3',
                 'max:2000',
             ],
+        ], [
+            'description.required' => 'Conte em poucas palavras o que você procura para criarmos sua rota.',
+            'description.min' => 'Digite pelo menos 3 caracteres, por exemplo: comida, praia ou cultura.',
+            'description.max' => 'Sua descrição ficou muito longa. Tente resumir em até 2000 caracteres.',
         ]);
 
         /*
@@ -94,6 +98,14 @@ class ItineraryController extends Controller
                     'ai_error',
                     'Não conseguimos interpretar sua solicitação agora. Tente novamente em alguns instantes.'
                 );
+        }
+
+        if (! $request->boolean('time_confirmed') && ! $this->descriptionMentionsAvailableTime($data['description'])) {
+            return back()
+                ->withInput()
+                ->with([
+                    'needs_time_question' => true,
+                ]);
         }
 
         /*
@@ -337,5 +349,38 @@ class ItineraryController extends Controller
         }
 
         return $score;
+    }
+
+    private function descriptionMentionsAvailableTime(string $description): bool
+    {
+        $normalized = str($description)
+            ->lower()
+            ->ascii()
+            ->toString();
+
+        if (preg_match('/\b\d+\s*(h|hora|horas|min|minuto|minutos)\b/', $normalized) === 1) {
+            return true;
+        }
+
+        if (preg_match('/\b\d+\s*(a|ate|-)\s*\d+\s*(h|hora|horas)\b/', $normalized) === 1) {
+            return true;
+        }
+
+        foreach ([
+            'manha toda',
+            'tarde toda',
+            'noite toda',
+            'dia inteiro',
+            'meio periodo',
+            'periodo inteiro',
+            'pouco tempo',
+            'tempo livre',
+        ] as $term) {
+            if (str_contains($normalized, $term)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

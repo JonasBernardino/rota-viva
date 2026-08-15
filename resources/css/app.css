@@ -643,6 +643,66 @@ textarea:focus-visible {
     line-height: 1.6;
 }
 
+.route-builder-followup {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid rgba(0, 75, 61, 0.18);
+    border-radius: 1.1rem;
+    background:
+        radial-gradient(circle at top right, rgba(237, 151, 111, 0.18), transparent 32%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(244, 239, 230, 0.92));
+    box-shadow: 0 18px 44px rgb(0 0 0 / 6%);
+}
+
+.route-builder-followup h2 {
+    max-width: 42rem;
+    margin: 0;
+    color: var(--forest);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.65rem, 3vw, 2.35rem);
+    font-weight: 400;
+    line-height: 1.08;
+}
+
+.route-builder-followup p:not(.eyebrow) {
+    max-width: 48rem;
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.65;
+}
+
+.route-builder-time-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.route-builder-time-option {
+    padding: 0.8rem 1rem;
+    border: 1px solid rgba(0, 75, 61, 0.28);
+    border-radius: 999px;
+    background: var(--white);
+    color: var(--forest);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.route-builder-time-option:hover,
+.route-builder-time-option:focus-visible {
+    border-color: var(--forest);
+    background: var(--forest);
+    color: var(--white);
+    transform: translateY(-1px);
+}
+
 .route-builder-loading {
     position: fixed;
     z-index: 9999;
@@ -2406,6 +2466,35 @@ html[data-theme="dark"] .route-builder-empty-state {
     border-color: rgba(237, 151, 111, 0.28);
 }
 
+html[data-theme="dark"] .route-builder-followup {
+    background:
+        radial-gradient(circle at top right, rgba(237, 151, 111, 0.16), transparent 34%),
+        linear-gradient(135deg, #16251f, #101c18);
+    border-color: rgba(216, 247, 234, 0.14);
+    box-shadow: 0 18px 50px rgb(0 0 0 / 18%);
+}
+
+html[data-theme="dark"] .route-builder-followup h2 {
+    color: var(--ink);
+}
+
+html[data-theme="dark"] .route-builder-followup p:not(.eyebrow) {
+    color: var(--muted);
+}
+
+html[data-theme="dark"] .route-builder-time-option {
+    background: #0c1612;
+    border-color: rgba(216, 247, 234, 0.2);
+    color: var(--ink);
+}
+
+html[data-theme="dark"] .route-builder-time-option:hover,
+html[data-theme="dark"] .route-builder-time-option:focus-visible {
+    background: var(--terracotta);
+    border-color: var(--terracotta);
+    color: #130c09;
+}
+
 html[data-theme="dark"] .route-builder-suggestions,
 html[data-theme="dark"] .route-builder-alternative {
     background: #101c18;
@@ -3268,6 +3357,25 @@ html[data-theme="dark"] .leaflet-tile {
 
 .route-builder-error p {
     margin: 0;
+}
+
+.route-builder-error__list {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0.35rem 0 0 1.1rem;
+    padding: 0;
+}
+
+.field-error {
+    margin: -0.35rem 0 0;
+    color: #9d3122;
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.route-builder-card textarea[aria-invalid="true"] {
+    border-color: #c75b3a;
+    box-shadow: 0 0 0 3px rgba(199, 91, 58, 0.14);
 }
 
 .route-builder-empty-state {

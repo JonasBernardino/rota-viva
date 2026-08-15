@@ -73,6 +73,14 @@ class LocalPreferenceInterpreter
 
     private function detectAvailableMinutes(string $text): ?int
     {
+        if (preg_match('/(\d+)\s*(?:a|ate|-)\s*(\d+)\s*(h|hora|horas)/', $text, $matches) === 1) {
+            return ((int) $matches[2]) * 60;
+        }
+
+        if (preg_match('/mais de\s*(\d+)\s*(h|hora|horas)/', $text, $matches) === 1) {
+            return (((int) $matches[1]) + 2) * 60;
+        }
+
         if (preg_match('/(\d+)\s*(h|hora|horas)/', $text, $matches) === 1) {
             return ((int) $matches[1]) * 60;
         }
@@ -81,7 +89,15 @@ class LocalPreferenceInterpreter
             return (int) $matches[1];
         }
 
-        return 240;
+        if ($this->containsAny($text, ['manha toda', 'tarde toda', 'noite toda', 'meio periodo'])) {
+            return 240;
+        }
+
+        if ($this->containsAny($text, ['dia inteiro', 'periodo inteiro'])) {
+            return 480;
+        }
+
+        return null;
     }
 
     private function detectBudget(string $text): ?float

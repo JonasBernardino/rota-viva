@@ -20,6 +20,30 @@
 
             @include('partials.ai-disclaimer')
 
+            @if ($errors->any())
+                <div class="route-builder-error" role="alert">
+
+                    <span class="route-builder-error__icon" aria-hidden="true">
+                        !
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Ajuste sua busca para continuar.
+                        </strong>
+
+                        <ul class="route-builder-error__list">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+
+                    </div>
+
+                </div>
+            @endif
+
             @if (session('ai_error'))
                 <div class="route-builder-error" role="alert">
 
@@ -39,6 +63,31 @@
 
                     </div>
 
+                </div>
+            @endif
+
+            @if (session('needs_time_question'))
+                <div class="route-builder-followup" role="status" aria-live="polite">
+                    <p class="eyebrow">Só preciso de mais uma informação</p>
+                    <h2>Quanto tempo você tem para essa experiência?</h2>
+                    <p>
+                        O tempo muda totalmente a montagem da rota. Com essa resposta, conseguimos escolher uma sequência
+                        mais realista sem pedir todos os detalhes de uma vez.
+                    </p>
+                    <div class="route-builder-time-options" aria-label="Escolha o tempo disponível">
+                        <button type="button" class="route-builder-time-option"
+                            data-time-answer="Tenho até 2 horas disponíveis.">
+                            Até 2 horas
+                        </button>
+                        <button type="button" class="route-builder-time-option"
+                            data-time-answer="Tenho entre 2 e 4 horas disponíveis.">
+                            2 a 4 horas
+                        </button>
+                        <button type="button" class="route-builder-time-option"
+                            data-time-answer="Tenho mais de 4 horas disponíveis.">
+                            Mais de 4 horas
+                        </button>
+                    </div>
                 </div>
             @endif
 
@@ -90,14 +139,20 @@
             @endif
 
             <form action="{{ route('routes.store') }}" method="post" data-route-builder-form
+                data-route-preferences-form
                 data-loading-label="Criando sua rota..."
                 data-loading-title="Criando sua experiência personalizada"
                 data-loading-description="Estamos avaliando tempo, orçamento, perfil e atrativos oficiais do município.">
                 @csrf
+                <input type="hidden" name="time_confirmed" value="{{ old('time_confirmed') }}" data-time-confirmed>
                 <label for="experience-query">Conte o que você
                     procura</label>
                 <textarea id="experience-query" name="description" rows="7"
+                    @error('description') aria-invalid="true" aria-describedby="experience-query-error" @enderror
                     placeholder="Ex.: Quero cultura e tranquilidade, estou com uma criança e tenho quatro horas.">{{ old('description', $initialQuery ?? '') }}</textarea>
+                @error('description')
+                    <p class="field-error" id="experience-query-error">{{ $message }}</p>
+                @enderror
                 <p class="route-builder-status" data-route-builder-status hidden role="status">
                     Estamos criando sua rota. Se a IA local demorar, usamos uma interpretação segura pelo próprio sistema.
                 </p>
