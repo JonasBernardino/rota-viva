@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Public\AdaptationController;
 use App\Http\Controllers\Public\CatalogController;
+use App\Http\Controllers\Public\CityMapController;
 use App\Http\Controllers\Public\ItineraryController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,26 +53,19 @@ foreach ($catalogs as $routePrefix => $uri) {
         ->name($routePrefix.'.show');
 }
 
-Route::view('/mapa-da-cidade', 'pages.map')->name('city-map');
-Route::get('/criar-rota', [ItineraryController::class, 'create'])
-    ->name('routes.create');
+Route::get('/mapa-da-cidade', CityMapController::class)->name('city-map');
 
-Route::post('/criar-rota', [ItineraryController::class, 'store'])
-    ->name('routes.store');
-Route::get(
-    '/minha-rota/{itinerary}',
-    [ItineraryController::class, 'show']
-)->name('routes.show');
-Route::post(
-    '/minha-rota/{itinerary}/adaptar/chuva',
-    [AdaptationController::class, 'rain']
-)->name('routes.adapt.rain');
+Route::get('/criar-rota', [ItineraryController::class, 'create'])->name('routes.create');
+Route::post('/criar-rota', [ItineraryController::class, 'store'])->name('routes.store');
 
-Route::get(
-    '/minha-rota/{itinerary}/adaptacoes/{adaptation}',
-    [AdaptationController::class, 'show']
-)->name('routes.adaptation.show');
-Route::view('/entrar', 'pages.login')->name('login');
+Route::get('/minha-rota/{itinerary}', [ItineraryController::class, 'show'])->name('routes.show');
+Route::post('/minha-rota/{itinerary}/adaptar/chuva', [AdaptationController::class, 'rain'])->name('routes.adapt.rain');
+Route::get('/minha-rota/{itinerary}/adaptacoes/{adaptation}', [AdaptationController::class, 'show'])->name('routes.adaptation.show');
+
+// Autenticação Real
+Route::get('/entrar', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/entrar', [AuthController::class, 'login'])->name('login.post');
+Route::post('/sair', [AuthController::class, 'logout'])->name('logout');
 
 $institutionalPages = [
     'about' => ['/sobre-o-projeto', 'Sobre o projeto', 'Conheça a proposta, os princípios e o impacto esperado do Rota Viva.'],
@@ -85,8 +81,9 @@ foreach ($institutionalPages as $name => [$uri, $title, $description]) {
     Route::view($uri, 'pages.content', compact('title', 'description'))->name($name);
 }
 
+// Painel Administrativo de Gestão Municipal
 Route::middleware(['auth', 'can:access-admin-panel'])->prefix('gestor')->name('admin.')->group(function (): void {
-    Route::view('/', 'admin.dashboard')->name('dashboard');
+    Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
 
     $modules = [
         'tourist-spots' => 'Pontos turísticos',
@@ -99,6 +96,8 @@ Route::middleware(['auth', 'can:access-admin-panel'])->prefix('gestor')->name('a
     ];
 
     foreach ($modules as $name => $title) {
-        Route::view('/'.$name, 'admin.module', compact('title'))->name($name.'.index');
+        Route::get('/'.$name, [AdminController::class, 'module'])
+            ->defaults('module', $name)
+            ->name($name.'.index');
     }
 });

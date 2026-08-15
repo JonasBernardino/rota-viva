@@ -11,39 +11,37 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('interactions', function (Blueprint $table): void {
+        Schema::create('interacoes', function (Blueprint $table): void {
             $table->id();
-            $table->string('event_name')->index();
-            $table->string('entity_type')->nullable();
-            $table->unsignedBigInteger('entity_id')->nullable();
-            $table->json('payload')->nullable();
-            $table->string('ip_hash', 64)->nullable();
+            $table->string('sessao_id')->index();
+            $table->string('tipo_interacao')->index()->comment('view_place, generate_route, adapt_rain, click_business, download_itinerary');
+            $table->string('entidade_tipo')->nullable();
+            $table->unsignedBigInteger('entidade_id')->nullable();
+            $table->json('metadados')->nullable();
+            $table->string('ip_anonimizado', 64)->nullable();
             $table->string('user_agent')->nullable();
-            $table->timestamp('created_at')->useCurrent()->index();
+            $table->timestamp('criado_em')->useCurrent();
         });
 
-        Schema::create('destination_insights', function (Blueprint $table): void {
+        Schema::create('insights_destino', function (Blueprint $table): void {
             $table->id();
-            $table->string('insight_type')->index()->comment('unmet_demand, weather_impact, popular_spot, accessibility_gap');
-            $table->string('title');
-            $table->text('description');
-            $table->json('metrics')->nullable();
-            $table->string('severity')->default('info')->comment('info, warning, opportunity');
-            $table->string('status')->default('open')->comment('open, acknowledged, resolved');
-            $table->timestamp('resolved_at')->nullable();
+            $table->date('data_referencia')->index();
+            $table->string('metrica')->index();
+            $table->decimal('valor', 14, 4);
+            $table->json('dimensoes')->nullable();
             $table->timestamps();
         });
 
-        Schema::create('audit_logs', function (Blueprint $table): void {
+        Schema::create('logs_auditoria', function (Blueprint $table): void {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable()->index();
-            $table->string('action');
-            $table->string('entity_type');
-            $table->unsignedBigInteger('entity_id')->nullable();
-            $table->json('old_values')->nullable();
-            $table->json('new_values')->nullable();
+            $table->foreignId('usuario_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('acao')->index();
+            $table->string('entidade_tipo');
+            $table->unsignedBigInteger('entidade_id')->nullable();
+            $table->json('valores_anteriores')->nullable();
+            $table->json('valores_novos')->nullable();
             $table->string('ip_address', 45)->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('criado_em')->useCurrent();
         });
     }
 
@@ -52,8 +50,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('audit_logs');
-        Schema::dropIfExists('destination_insights');
-        Schema::dropIfExists('interactions');
+        Schema::dropIfExists('logs_auditoria');
+        Schema::dropIfExists('insights_destino');
+        Schema::dropIfExists('interacoes');
     }
 };

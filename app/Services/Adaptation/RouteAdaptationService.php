@@ -2,35 +2,35 @@
 
 namespace App\Services\Adaptation;
 
-use App\Contracts\PlaceRepository;
+use App\Contracts\AtrativoRepository;
 use App\DTOs\AdaptedItineraryDTO;
 use App\DTOs\ItineraryStopDTO;
-use App\Models\Itinerary;
-use App\Models\Place;
+use App\Models\Atrativo;
+use App\Models\Roteiro;
 use RuntimeException;
 
 class RouteAdaptationService
 {
     public function __construct(
-        private readonly PlaceRepository $places,
+        private readonly AtrativoRepository $places,
     ) {}
 
     public function adaptForRain(
-        Itinerary $itinerary
+        Roteiro $itinerary
     ): AdaptedItineraryDTO {
         $itinerary->load([
-            'items.place.category',
-            'items.place.accessibilityFeatures',
-            'preference',
+            'itens.atrativo.categoria',
+            'itens.atrativo.recursosAcessibilidade',
+            'preferencia',
         ]);
 
         $removed = [];
         $kept = [];
 
-        foreach ($itinerary->items as $item) {
-            $place = $item->place;
+        foreach ($itinerary->itens as $item) {
+            $place = $item->atrativo;
 
-            if ($place->is_outdoor) {
+            if ($place->is_ar_livre || $place->is_outdoor) {
                 $removed[] = $place->id;
 
                 continue;
@@ -38,14 +38,15 @@ class RouteAdaptationService
 
             $kept[] = new ItineraryStopDTO(
                 placeId: $place->id,
-                name: $place->name,
-                category: $place->category?->name
+                name: $place->nome,
+                category: $place->categoria?->nome
+                    ?? $place->category?->name
                     ?? 'Experiência',
-                durationMinutes: $item->duration_minutes,
-                estimatedCost: $item->estimated_cost,
+                durationMinutes: $item->duracao_minutos,
+                estimatedCost: $item->custo_estimado,
                 latitude: $place->latitude,
                 longitude: $place->longitude,
-                isOutdoor: $place->is_outdoor,
+                isOutdoor: $place->is_ar_livre,
                 score: 0,
             );
         }
@@ -86,14 +87,15 @@ class RouteAdaptationService
 
             $stop = new ItineraryStopDTO(
                 placeId: $replacement->id,
-                name: $replacement->name,
-                category: $replacement->category?->name
+                name: $replacement->nome,
+                category: $replacement->categoria?->nome
+                    ?? $replacement->category?->name
                     ?? 'Experiência',
-                durationMinutes: $replacement->duration_minutes,
-                estimatedCost: $replacement->average_cost,
+                durationMinutes: $replacement->duracao_minutos,
+                estimatedCost: $replacement->custo_medio,
                 latitude: $replacement->latitude,
                 longitude: $replacement->longitude,
-                isOutdoor: $replacement->is_outdoor,
+                isOutdoor: $replacement->is_ar_livre,
                 score: 0,
             );
 
@@ -116,12 +118,12 @@ class RouteAdaptationService
                 ->sum('estimatedCost');
 
         if (
-            $itinerary->preference->available_minutes
+            $itinerary->preferencia?->minutos_disponiveis
             !== null
             && $duration
                 > $itinerary
-                    ->preference
-                    ->available_minutes
+                    ->preferencia
+                    ->minutos_disponiveis
         ) {
             throw new RuntimeException(
                 'A rota adaptada ultrapassa o tempo disponível.'
@@ -129,12 +131,12 @@ class RouteAdaptationService
         }
 
         if (
-            $itinerary->preference->budget
+            $itinerary->preferencia?->orcamento
             !== null
             && $cost
                 > $itinerary
-                    ->preference
-                    ->budget
+                    ->preferencia
+                    ->orcamento
         ) {
             throw new RuntimeException(
                 'A rota adaptada ultrapassa o orçamento.'
@@ -151,38 +153,38 @@ class RouteAdaptationService
     }
 
     private function findReplacementCandidates(
-        Itinerary $itinerary,
+        Roteiro $itinerary,
         array $excludedIds,
     ) {
         $preferences =
-            $itinerary->preference;
+            $itinerary->preferencia;
 
         return $this->places
-            ->getAvailablePlaces()
+            ->available()
             ->filter(
-                fn (Place $place) => ! $place->is_outdoor
+                fn (Atrativo $place) => ! $place->is_ar_livre
             )
             ->reject(
-                fn (Place $place) => in_array(
+                fn (Atrativo $place) => in_array(
                     $place->id,
                     $excludedIds,
                     true
                 )
             )
-            ->filter(function (Place $place) use (
+            ->filter(function (Atrativo $place) use (
                 $preferences
             ) {
                 if (
-                    $preferences->has_children
-                    && ! $place->suitable_for_children
+                    $preferences?->tem_criancas
+                    && ! $place->adequado_criancas
                 ) {
                     return false;
                 }
 
                 if (
-                    $preferences->budget !== null
-                    && $place->average_cost
-                        > $preferences->budget
+                    $preferences?->orcamento !== null
+                    && $place->custo_medio
+                        > $preferences->orcamento
                 ) {
                     return false;
                 }
@@ -190,7 +192,7 @@ class RouteAdaptationService
                 return true;
             })
             ->sortByDesc(
-                fn (Place $place) => $this->calculateCompatibility(
+                fn (Atrativo $place) => $this->calculateCompatibility(
                     $place,
                     $preferences
                 )
@@ -199,7 +201,7 @@ class RouteAdaptationService
     }
 
     private function calculateCompatibility(
-        Place $place,
+        Atrativo $place,
         $preferences
     ): int {
         $score = 0;
@@ -211,7 +213,7 @@ class RouteAdaptationService
         );
 
         foreach (
-            $preferences->interests ?? [] as $interest
+            $preferences?->interesses ?? [] as $interest
         ) {
             if (
                 $tags->contains(
@@ -223,7 +225,7 @@ class RouteAdaptationService
         }
 
         foreach (
-            $preferences->moods ?? [] as $mood
+            $preferences?->humores ?? [] as $mood
         ) {
             if (
                 $tags->contains(
@@ -235,16 +237,16 @@ class RouteAdaptationService
         }
 
         if (
-            $preferences->intensity
-            && $place->intensity
-                === $preferences->intensity
+            $preferences?->intensidade
+            && $place->intensidade
+                === $preferences->intensidade
         ) {
             $score += 10;
         }
 
         if (
-            $preferences->has_children
-            && $place->suitable_for_children
+            $preferences?->tem_criancas
+            && $place->adequado_criancas
         ) {
             $score += 10;
         }
@@ -253,14 +255,14 @@ class RouteAdaptationService
     }
 
     private function orderStops(
-        Itinerary $itinerary,
+        Roteiro $itinerary,
         array $stops
     ): array {
         $originalOrder =
-            $itinerary->items
+            $itinerary->itens
                 ->pluck(
-                    'position',
-                    'place_id'
+                    'posicao',
+                    'atrativo_id'
                 );
 
         usort(

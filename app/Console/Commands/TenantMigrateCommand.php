@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Municipality;
+use App\Models\Municipio;
 use App\Services\Tenant\TenantManager;
 use Illuminate\Console\Command;
 
@@ -30,11 +30,11 @@ class TenantMigrateCommand extends Command
         $tenantIdentifier = $this->argument('tenant');
 
         if ($tenantIdentifier) {
-            $municipalities = Municipality::where('slug', $tenantIdentifier)
+            $municipalities = Municipio::where('slug', $tenantIdentifier)
                 ->orWhere('uuid', $tenantIdentifier)
                 ->get();
         } else {
-            $municipalities = Municipality::all();
+            $municipalities = Municipio::all();
         }
 
         if ($municipalities->isEmpty()) {
@@ -44,13 +44,13 @@ class TenantMigrateCommand extends Command
         }
 
         foreach ($municipalities as $municipality) {
-            $this->info("Migrating schema [{$municipality->schema_name}] for municipality [{$municipality->name}]...");
+            $this->info("Migrating schema [{$municipality->nome_schema}] for municipality [{$municipality->nome}]...");
 
             try {
                 $tenantManager->migrateTenant($municipality);
-                $this->info("✓ Successfully migrated [{$municipality->name}].");
+                $this->info("✓ Successfully migrated [{$municipality->nome}].");
             } catch (\Throwable $e) {
-                $this->error("✗ Failed to migrate [{$municipality->name}]: {$e->getMessage()}");
+                $this->error("✗ Failed to migrate [{$municipality->nome}]: {$e->getMessage()}");
 
                 return self::FAILURE;
             }

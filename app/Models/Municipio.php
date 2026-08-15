@@ -10,18 +10,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'uuid',
-    'name',
+    'nome',
     'slug',
-    'ibge_code',
-    'state',
-    'schema_name',
+    'codigo_ibge',
+    'uf',
+    'nome_schema',
     'status',
-    'timezone',
-    'settings',
+    'fuso_horario',
+    'configuracoes',
 ])]
-class Municipality extends Model
+class Municipio extends Model
 {
     use HasFactory, HasUuids;
+
+    protected $table = 'municipios';
 
     /**
      * Get the columns that should receive a unique identifier.
@@ -41,23 +43,20 @@ class Municipality extends Model
     protected function casts(): array
     {
         return [
-            'settings' => 'array',
+            'configuracoes' => 'array',
         ];
     }
 
-    /**
-     * The domains registered for this municipality.
-     *
-     * @return HasMany<MunicipalityDomain, $this>
-     */
-    public function domains(): HasMany
+    public function dominios(): HasMany
     {
-        return $this->hasMany(MunicipalityDomain::class);
+        return $this->hasMany(DominioMunicipio::class, 'municipio_id');
     }
 
-    /**
-     * Check if municipality is currently active.
-     */
+    public function usuarios(): HasMany
+    {
+        return $this->hasMany(UsuarioPlataforma::class, 'municipio_id');
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

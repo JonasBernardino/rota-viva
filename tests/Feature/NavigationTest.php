@@ -58,12 +58,12 @@ class NavigationTest extends TestCase
         $routes = [
             ['tourist-spots.show', 'igreja-nossa-senhora-da-guia'],
             ['culture.show', 'centro-cultural-e-memoria-de-lucena'],
-            ['tours.show', 'passeio-ecologico-rio-miriri'],
-            ['guides.show', 'guia-joao-ribeiro-condutor'],
+            ['tours.show', 'guia-tiago-miriri-ecoturismo'],
+            ['guides.show', 'guia-dona-marta-caminhos-da-guia'],
             ['official-itineraries.show', '1'],
-            ['stays.show', 'pousada-dos-coqueirais-lucena'],
+            ['stays.show', 'pousada-recanto-dos-coqueiros'],
             ['dining.show', 'restaurante-sabores-da-guia'],
-            ['agenda.show', 'festa-tradicional-da-guia-2026'],
+            ['agenda.show', 'festa-da-padroeira-nossa-senhora-da-guia-2026'],
         ];
 
         foreach ($routes as [$routeName, $slug]) {
@@ -105,6 +105,40 @@ class NavigationTest extends TestCase
 
         $this->actingAs($manager)
             ->get(route('admin.tourist-spots.index'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Pontos Turísticos');
+    }
+
+    public function test_manager_can_login_with_valid_credentials(): void
+    {
+        $response = $this->post(route('login.post'), [
+            'email' => 'gestor@lucena.pb.gov.br',
+            'password' => '12345678',
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertAuthenticated();
+    }
+
+    public function test_user_cannot_login_with_invalid_credentials(): void
+    {
+        $response = $this->from(route('login'))->post(route('login.post'), [
+            'email' => 'gestor@lucena.pb.gov.br',
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
+
+    public function test_authenticated_user_can_logout(): void
+    {
+        $manager = User::where('email', 'gestor@lucena.pb.gov.br')->firstOrFail();
+
+        $response = $this->actingAs($manager)->post(route('logout'));
+
+        $response->assertRedirect(route('home'));
+        $this->assertGuest();
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Municipality;
+use App\Models\Municipio;
 use App\Services\Tenant\TenantManager;
 use Closure;
 use Illuminate\Http\Request;
@@ -24,8 +24,8 @@ class ResolveTenantMiddleware
         $tenantIdentifier = $request->header('X-Tenant') ?? $request->query('_tenant');
 
         if ($tenantIdentifier) {
-            /** @var Municipality|null $municipality */
-            $municipality = Municipality::where('slug', $tenantIdentifier)
+            /** @var Municipio|null $municipality */
+            $municipality = Municipio::where('slug', $tenantIdentifier)
                 ->orWhere('uuid', $tenantIdentifier)
                 ->first();
         } else {

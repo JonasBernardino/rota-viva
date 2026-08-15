@@ -8,25 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable([
-    'name',
+    'nome',
     'slug',
-    'icon',
-    'description',
 ])]
-class AccessibilityFeature extends Model
+class RecursoAcessibilidade extends Model
 {
     use HasFactory;
 
-    /**
-     * Places with this accessibility feature.
-     *
-     * @return BelongsToMany<Place, $this>
-     */
-    public function places(): BelongsToMany
+    protected $table = 'recursos_acessibilidade';
+
+    public function atrativos(): BelongsToMany
     {
         return $this->belongsToMany(
-            Place::class,
-            'place_accessibility_features'
+            Atrativo::class,
+            'atrativo_recursos_acessibilidade',
+            'recurso_acessibilidade_id',
+            'atrativo_id'
         );
     }
 }

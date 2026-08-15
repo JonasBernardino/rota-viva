@@ -11,36 +11,37 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('municipalities', function (Blueprint $table): void {
+        Schema::create('municipios', function (Blueprint $table): void {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->string('name');
+            $table->string('nome');
             $table->string('slug')->unique();
-            $table->string('ibge_code', 20)->nullable()->index();
-            $table->string('state', 2);
-            $table->string('schema_name')->unique();
-            $table->string('status')->default('active')->index();
-            $table->string('timezone')->default('America/Fortaleza');
-            $table->json('settings')->nullable();
+            $table->string('codigo_ibge', 10)->nullable()->unique();
+            $table->string('uf', 2)->default('PB');
+            $table->string('nome_schema')->unique();
+            $table->string('status')->default('active')->index()->comment('active, inactive, suspended');
+            $table->string('fuso_horario')->default('America/Fortaleza');
+            $table->json('configuracoes')->nullable();
             $table->timestamps();
         });
 
-        Schema::create('municipality_domains', function (Blueprint $table): void {
+        Schema::create('dominios_municipios', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('municipality_id')->constrained('municipalities')->cascadeOnDelete();
-            $table->string('domain')->unique();
-            $table->boolean('is_primary')->default(false);
-            $table->timestamp('verified_at')->nullable();
+            $table->foreignId('municipio_id')->constrained('municipios')->cascadeOnDelete();
+            $table->string('dominio')->unique();
+            $table->boolean('is_principal')->default(false);
+            $table->timestamp('verificado_em')->nullable();
             $table->timestamps();
         });
 
-        Schema::create('platform_users', function (Blueprint $table): void {
+        Schema::create('usuarios_plataforma', function (Blueprint $table): void {
             $table->id();
-            $table->string('name');
+            $table->string('nome');
             $table->string('email')->unique();
-            $table->string('password');
-            $table->string('role')->default('admin');
-            $table->boolean('is_active')->default(true);
+            $table->string('senha');
+            $table->foreignId('municipio_id')->nullable()->constrained('municipios')->nullOnDelete();
+            $table->string('papel')->default('gestor_municipal')->comment('super_admin, gestor_municipal, auditor');
+            $table->boolean('is_ativo')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });
@@ -51,8 +52,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('platform_users');
-        Schema::dropIfExists('municipality_domains');
-        Schema::dropIfExists('municipalities');
+        Schema::dropIfExists('usuarios_plataforma');
+        Schema::dropIfExists('dominios_municipios');
+        Schema::dropIfExists('municipios');
     }
 };

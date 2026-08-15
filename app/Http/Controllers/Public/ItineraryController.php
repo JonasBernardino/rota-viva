@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\Itinerary;
+use App\Models\Roteiro;
 use App\Services\Ai\AiExperienceWriter;
 use App\Services\Ai\AiPreferenceInterpreter;
 use App\Services\Itinerary\ItineraryPersistenceService;
@@ -79,11 +79,11 @@ class ItineraryController extends Controller
     }
 
     public function show(
-        Itinerary $itinerary
+        Roteiro $itinerary
     ) {
         $itinerary->load([
-            'preference',
-            'items.place.category',
+            'preferencia',
+            'itens.atrativo.categoria',
         ]);
 
         return view(

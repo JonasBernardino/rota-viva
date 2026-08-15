@@ -2,8 +2,8 @@
 
 namespace App\Services\Tenant;
 
-use App\Models\Municipality;
-use App\Models\MunicipalityDomain;
+use App\Models\DominioMunicipio;
+use App\Models\Municipio;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -15,12 +15,12 @@ class TenantManager
     /**
      * The currently resolved municipality for this request / process.
      */
-    protected ?Municipality $currentTenant = null;
+    protected ?Municipio $currentTenant = null;
 
     /**
      * Get the currently active tenant.
      */
-    public function current(): ?Municipality
+    public function current(): ?Municipio
     {
         return $this->currentTenant;
     }
@@ -36,17 +36,17 @@ class TenantManager
     /**
      * Switch database search_path to the given municipality's schema.
      */
-    public function switchTo(Municipality $municipality): void
+    public function switchTo(Municipio $municipio): void
     {
-        $this->validateSchemaName($municipality->schema_name);
+        $this->validateSchemaName($municipio->nome_schema);
 
         $driver = DB::connection()->getDriverName();
 
         if ($driver === 'pgsql') {
-            DB::statement("SET search_path TO \"{$municipality->schema_name}\", public");
+            DB::statement("SET search_path TO \"{$municipio->nome_schema}\", public");
         }
 
-        $this->currentTenant = $municipality;
+        $this->currentTenant = $municipio;
     }
 
     /**
@@ -94,13 +94,13 @@ class TenantManager
     /**
      * Run tenant migrations on the municipality's schema.
      */
-    public function migrateTenant(Municipality $municipality): void
+    public function migrateTenant(Municipio $municipio): void
     {
         $driver = DB::connection()->getDriverName();
 
         if ($driver === 'pgsql') {
-            $this->createSchema($municipality->schema_name);
-            DB::statement("SET search_path TO \"{$municipality->schema_name}\", public");
+            $this->createSchema($municipio->nome_schema);
+            DB::statement("SET search_path TO \"{$municipio->nome_schema}\", public");
 
             try {
                 Artisan::call('migrate', [
@@ -124,51 +124,51 @@ class TenantManager
      * @param  array<string, mixed>  $attributes
      * @param  array<int, string>  $domains
      */
-    public function createTenant(array $attributes, array $domains = []): Municipality
+    public function createTenant(array $attributes, array $domains = []): Municipio
     {
         if (empty($attributes['uuid'])) {
             $attributes['uuid'] = (string) Str::uuid();
         }
 
         if (empty($attributes['slug'])) {
-            $attributes['slug'] = Str::slug($attributes['name'] ?? 'tenant');
+            $attributes['slug'] = Str::slug($attributes['nome'] ?? 'tenant');
         }
 
-        if (empty($attributes['schema_name'])) {
+        if (empty($attributes['nome_schema'])) {
             $sanitizedSlug = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $attributes['slug']) ?: 'tenant');
-            $attributes['schema_name'] = 'tenant_'.$sanitizedSlug;
+            $attributes['nome_schema'] = 'tenant_'.$sanitizedSlug;
         }
 
-        $this->validateSchemaName($attributes['schema_name']);
+        $this->validateSchemaName($attributes['nome_schema']);
 
-        return DB::transaction(function () use ($attributes, $domains): Municipality {
-            /** @var Municipality $municipality */
-            $municipality = Municipality::create($attributes);
+        return DB::transaction(function () use ($attributes, $domains): Municipio {
+            /** @var Municipio $municipio */
+            $municipio = Municipio::create($attributes);
 
             if (empty($domains)) {
-                $domains = [$municipality->slug.'.rotaviva.com.br'];
+                $domains = [$municipio->slug.'.rotaviva.com.br'];
             }
 
             foreach ($domains as $index => $domain) {
-                MunicipalityDomain::create([
-                    'municipality_id' => $municipality->id,
-                    'domain' => $domain,
-                    'is_primary' => $index === 0,
-                    'verified_at' => now(),
+                DominioMunicipio::create([
+                    'municipio_id' => $municipio->id,
+                    'dominio' => $domain,
+                    'is_principal' => $index === 0,
+                    'verificado_em' => now(),
                 ]);
             }
 
-            $this->dropSchema($municipality->schema_name);
-            $this->migrateTenant($municipality);
+            $this->dropSchema($municipio->nome_schema);
+            $this->migrateTenant($municipio);
 
-            return $municipality->load('domains');
+            return $municipio->load('dominios');
         });
     }
 
     /**
      * Resolve municipality by domain name or fallback identifier.
      */
-    public function resolveByDomain(string $domain): ?Municipality
+    public function resolveByDomain(string $domain): ?Municipio
     {
         $normalizedDomain = strtolower(trim($domain));
 
@@ -178,38 +178,38 @@ class TenantManager
         }
 
         try {
-            if (! Schema::hasTable('municipality_domains')) {
+            if (! Schema::hasTable('dominios_municipios')) {
                 return null;
             }
         } catch (\Throwable) {
             return null;
         }
 
-        /** @var MunicipalityDomain|null $domainRecord */
-        $domainRecord = MunicipalityDomain::with('municipality')
-            ->where('domain', $normalizedDomain)
+        /** @var DominioMunicipio|null $domainRecord */
+        $domainRecord = DominioMunicipio::with('municipio')
+            ->where('dominio', $normalizedDomain)
             ->first();
 
-        if ($domainRecord && $domainRecord->municipality && $domainRecord->municipality->isActive()) {
-            return $domainRecord->municipality;
+        if ($domainRecord && $domainRecord->municipio && $domainRecord->municipio->isActive()) {
+            return $domainRecord->municipio;
         }
 
         // Check if domain starts with a municipality slug (e.g. lucena.rotaviva.test or lucena.localhost)
         $subdomain = explode('.', $normalizedDomain)[0];
         if (! empty($subdomain) && $subdomain !== 'www' && $subdomain !== 'rotaviva' && $subdomain !== 'localhost' && $subdomain !== '127') {
-            /** @var Municipality|null $municipality */
-            $municipality = Municipality::where('slug', $subdomain)
+            /** @var Municipio|null $municipio */
+            $municipio = Municipio::where('slug', $subdomain)
                 ->where('status', 'active')
                 ->first();
 
-            if ($municipality) {
-                return $municipality;
+            if ($municipio) {
+                return $municipio;
             }
         }
 
         // Fallback for local development if only 1 active municipality exists
         if (app()->environment('local', 'testing') && ($normalizedDomain === 'localhost' || $normalizedDomain === '127.0.0.1')) {
-            return Municipality::where('status', 'active')->first();
+            return Municipio::where('status', 'active')->first();
         }
 
         return null;

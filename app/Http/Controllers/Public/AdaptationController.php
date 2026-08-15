@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\Itinerary;
-use App\Models\RouteAdaptation;
+use App\Models\AdaptacaoRota;
+use App\Models\Roteiro;
 use App\Services\Adaptation\RouteAdaptationService;
 use App\Services\Ai\AiAdaptationWriter;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class AdaptationController extends Controller
 {
     public function rain(
-        Itinerary $itinerary,
+        Roteiro $itinerary,
         RouteAdaptationService $adaptationService,
         AiAdaptationWriter $writer
     ) {
@@ -33,22 +33,16 @@ class AdaptationController extends Controller
                     $itinerary,
                     $adapted,
                     $narrative
-                ) {
+                ): AdaptacaoRota {
+                    /** @var AdaptacaoRota $adaptation */
                     $adaptation =
-                        RouteAdaptation::create([
-                            'itinerary_id' => $itinerary->id,
-
-                            'event' => 'RAIN_STARTED',
-
-                            'title' => $narrative->title,
-
-                            'summary' => $narrative->summary,
-
-                            'total_duration_minutes' => $adapted
-                                ->totalDurationMinutes,
-
-                            'total_estimated_cost' => $adapted
-                                ->totalEstimatedCost,
+                        AdaptacaoRota::create([
+                            'roteiro_id' => $itinerary->id,
+                            'evento' => 'RAIN_STARTED',
+                            'titulo' => $narrative->title,
+                            'resumo' => $narrative->summary,
+                            'duracao_total_minutos' => $adapted->totalDurationMinutes,
+                            'custo_total_estimado' => $adapted->totalEstimatedCost,
                         ]);
 
                     foreach (
@@ -64,21 +58,14 @@ class AdaptationController extends Controller
                                 : 'KEPT';
 
                         $adaptation
-                            ->items()
+                            ->itens()
                             ->create([
-                                'place_id' => $stop->placeId,
-
-                                'position' => $position + 1,
-
-                                'action' => $action,
-
-                                'duration_minutes' => $stop
-                                    ->durationMinutes,
-
-                                'estimated_cost' => $stop
-                                    ->estimatedCost,
-
-                                'reason' => $this->findReason(
+                                'atrativo_id' => $stop->placeId,
+                                'posicao' => $position + 1,
+                                'acao' => $action,
+                                'duracao_minutos' => $stop->durationMinutes,
+                                'custo_estimado' => $stop->estimatedCost,
+                                'motivo' => $this->findReason(
                                     $narrative->changes,
                                     $stop->placeId
                                 ),
@@ -90,9 +77,9 @@ class AdaptationController extends Controller
                     ) {
                         $original =
                             $itinerary
-                                ->items
+                                ->itens
                                 ->firstWhere(
-                                    'place_id',
+                                    'atrativo_id',
                                     $removedId
                                 );
 
@@ -101,22 +88,14 @@ class AdaptationController extends Controller
                         }
 
                         $adaptation
-                            ->items()
+                            ->itens()
                             ->create([
-                                'place_id' => $removedId,
-
-                                'position' => $original
-                                    ->position,
-
-                                'action' => 'REMOVED',
-
-                                'duration_minutes' => $original
-                                    ->duration_minutes,
-
-                                'estimated_cost' => $original
-                                    ->estimated_cost,
-
-                                'reason' => 'Removido porque a atividade é externa e começou a chover.',
+                                'atrativo_id' => $removedId,
+                                'posicao' => $original->posicao,
+                                'acao' => 'REMOVED',
+                                'duracao_minutos' => $original->duracao_minutos,
+                                'custo_estimado' => $original->custo_estimado,
+                                'motivo' => 'Removido porque a atividade é externa e começou a chover.',
                             ]);
                     }
 
@@ -128,22 +107,21 @@ class AdaptationController extends Controller
             'routes.adaptation.show',
             [
                 'itinerary' => $itinerary,
-
                 'adaptation' => $adaptation,
             ]
         );
     }
 
     public function show(
-        Itinerary $itinerary,
-        RouteAdaptation $adaptation
+        Roteiro $itinerary,
+        AdaptacaoRota $adaptation
     ) {
         $itinerary->load([
-            'items.place.category',
+            'itens.atrativo.categoria',
         ]);
 
         $adaptation->load([
-            'items.place.category',
+            'itens.atrativo.categoria',
         ]);
 
         return view(

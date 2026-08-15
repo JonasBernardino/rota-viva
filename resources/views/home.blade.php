@@ -159,10 +159,10 @@
                 <div class="places-grid">
                     <article class="place-card place-card--culture" id="cultura">
                         <img src="{{ asset('images/cultural-center.webp') }}" alt="Centro cultural instalado em construção histórica com portas verdes">
-                        <a class="place-card__content" href="{{ route('tourist-spots.show', 'centro-de-cultura-e-memoria') }}">
+                        <a class="place-card__content" href="{{ route('tourist-spots.show', 'centro-cultural-e-memoria-de-lucena') }}">
                             <span>
-                                <strong>Centro de Cultura e Memória</strong>
-                                <small>Cultura e história&nbsp;&nbsp;·&nbsp;&nbsp;1h</small>
+                                <strong>Centro Cultural e Memória de Lucena</strong>
+                                <small>Cultura e história&nbsp;&nbsp;·&nbsp;&nbsp;75 min</small>
                             </span>
                             <span class="place-card__arrow" aria-hidden="true">→</span>
                         </a>
@@ -170,10 +170,10 @@
 
                     <article class="place-card place-card--market" id="gastronomia">
                         <img src="{{ asset('images/local-market.webp') }}" alt="Mesa de mercado com alimentos, cerâmicas e sabores locais">
-                        <a class="place-card__content" href="{{ route('dining.show', 'mercado-de-sabores-locais') }}">
+                        <a class="place-card__content" href="{{ route('dining.show', 'mercado-de-sabores-e-peixe-fresco') }}">
                             <span>
-                                <strong>Mercado de Sabores Locais</strong>
-                                <small>Gastronomia&nbsp;&nbsp;·&nbsp;&nbsp;1h30</small>
+                                <strong>Mercado de Sabores e Peixe Fresco</strong>
+                                <small>Gastronomia&nbsp;&nbsp;·&nbsp;&nbsp;60 min</small>
                             </span>
                             <span class="place-card__arrow" aria-hidden="true">→</span>
                         </a>
@@ -181,10 +181,10 @@
 
                     <article class="place-card place-card--viewpoint" id="natureza">
                         <img src="{{ asset('images/rota-viva-hero.webp') }}" alt="Vista do mar e das montanhas a partir de um mirante arborizado">
-                        <a class="place-card__content" href="{{ route('tourist-spots.show', 'mirante-do-encontro') }}">
+                        <a class="place-card__content" href="{{ route('tourist-spots.show', 'mirante-do-encontro-pontinha') }}">
                             <span>
-                                <strong>Mirante do Encontro</strong>
-                                <small>Natureza&nbsp;&nbsp;·&nbsp;&nbsp;45 min</small>
+                                <strong>Mirante do Encontro e Pontinha</strong>
+                                <small>Natureza&nbsp;&nbsp;·&nbsp;&nbsp;60 min</small>
                             </span>
                             <span class="place-card__arrow" aria-hidden="true">→</span>
                         </a>

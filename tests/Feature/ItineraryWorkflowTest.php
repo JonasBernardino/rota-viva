@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Contracts\AiProvider;
-use App\Models\Itinerary;
+use App\Models\Roteiro;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
@@ -82,7 +82,7 @@ class ItineraryWorkflowTest extends TestCase
             'description' => 'Quero uma experiência tranquila e cultural, estou com uma criança, tenho quatro horas e orçamento de R$ 150.',
         ]);
 
-        $itinerary = Itinerary::latest('id')->first();
+        $itinerary = Roteiro::latest('id')->first();
         $this->assertNotNull($itinerary);
 
         $response->assertRedirect(route('routes.show', $itinerary));
@@ -98,7 +98,7 @@ class ItineraryWorkflowTest extends TestCase
         $rainResponse->assertRedirect();
 
         // 5. Follow adaptation view
-        $adaptation = $itinerary->adaptations()->first();
+        $adaptation = $itinerary->adaptacoes()->first();
         $this->assertNotNull($adaptation);
 
         $adaptationResponse = $this->get(route('routes.adaptation.show', [
