@@ -41,6 +41,54 @@
 
                 </div>
             @endif
+
+            @if (session('route_error'))
+                <div class="route-builder-empty-state" role="status">
+                    <p class="eyebrow">Vamos ajustar sua busca</p>
+                    <h2>Não encontramos uma rota completa ainda</h2>
+                    <p>{{ session('route_error') }}</p>
+
+                    @if (session('route_suggestions'))
+                        <div class="route-builder-suggestions">
+                            <strong>Você pode tentar:</strong>
+                            <ul>
+                                @foreach (session('route_suggestions', []) as $suggestion)
+                                    <li>{{ $suggestion }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @if (session('route_alternatives'))
+                        <div class="route-builder-alternatives">
+                            <strong>Alternativas próximas do que você pediu</strong>
+                            <div class="route-builder-alternatives__grid">
+                                @foreach (session('route_alternatives', []) as $alternative)
+                                    <article class="route-builder-alternative">
+                                        @if (! empty($alternative['image_url']))
+                                            <img src="{{ $alternative['image_url'] }}" alt="">
+                                        @endif
+                                        <div>
+                                            <span>{{ $alternative['category'] }}</span>
+                                            <h3>{{ $alternative['name'] }}</h3>
+                                            <p>{{ $alternative['description'] }}</p>
+                                            <small>
+                                                {{ $alternative['duration'] }} min ·
+                                                {{ (float) $alternative['cost'] > 0 ? 'R$ '.number_format((float) $alternative['cost'], 2, ',', '.') : 'Gratuito' }}
+                                            </small>
+                                            <a href="{{ route('tourist-spots.show', $alternative['slug']) }}">
+                                                Ver detalhes
+                                                <span aria-hidden="true">→</span>
+                                            </a>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             <form action="{{ route('routes.store') }}" method="post" data-route-builder-form>
                 @csrf
                 <label for="experience-query">Conte o que você

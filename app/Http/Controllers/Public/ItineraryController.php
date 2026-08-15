@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\Atrativo;
+use App\Models\Roteiro;
 use App\Services\Ai\AiExperienceWriter;
 use App\Services\Ai\AiPreferenceInterpreter;
 use App\Services\Analytics\JourneyAnalyticsService;
 use App\Services\Itinerary\ItineraryPersistenceService;
 use App\Services\Itinerary\ItineraryService;
+use App\DTOs\VisitorPreferencesDTO;
 use Illuminate\Http\Request;
 use RuntimeException;
-use App\Models\Roteiro;
 
 class ItineraryController extends Controller
 {
@@ -147,8 +149,11 @@ class ItineraryController extends Controller
             return back()
                 ->withInput()
                 ->with(
-                    'route_error',
-                    'Não encontramos atrativos compatíveis com essa busca. Tente informar o tipo de experiência, tempo disponível ou interesse principal, como cultura, natureza ou gastronomia.'
+                    [
+                        'route_error' => 'Não conseguimos montar uma rota completa com esses critérios, mas encontramos caminhos para você continuar planejando.',
+                        'route_suggestions' => $this->suggestPreferenceAdjustments($preferences),
+                        'route_alternatives' => $this->alternativePlaces($preferences),
+                    ]
                 );
         }
 
@@ -228,5 +233,109 @@ class ItineraryController extends Controller
             'pages.route-result',
             compact('itinerary')
         );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function suggestPreferenceAdjustments(VisitorPreferencesDTO $preferences): array
+    {
+        $suggestions = [
+            'Tente buscar por interesses mais amplos, como cultura, natureza, gastronomia ou lazer.',
+        ];
+
+        if ($preferences->availableMinutes !== null && $preferences->availableMinutes < 120) {
+            $suggestions[] = 'Aumente um pouco o tempo disponível para permitir pelo menos uma parada completa.';
+        } else {
+            $suggestions[] = 'Informe quanto tempo você tem, por exemplo: tenho 2 horas ou tenho uma tarde livre.';
+        }
+
+        if ($preferences->budget !== null && $preferences->budget <= 50) {
+            $suggestions[] = 'Se possível, aumente o orçamento ou peça explicitamente por opções gratuitas.';
+        } else {
+            $suggestions[] = 'Você também pode informar se prefere opções gratuitas ou de baixo custo.';
+        }
+
+        if ($preferences->accessibilityRequirements !== []) {
+            $suggestions[] = 'Caso alguma necessidade de acessibilidade seja flexível, descreva melhor o tipo de apoio necessário.';
+        }
+
+        if ($preferences->hasChildren === true) {
+            $suggestions[] = 'Para passeios com crianças, tente combinar interesses como família, cultura leve, praça, praia calma ou gastronomia.';
+        }
+
+        return array_values(array_unique(array_slice($suggestions, 0, 5)));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function alternativePlaces(VisitorPreferencesDTO $preferences): array
+    {
+        return Atrativo::query()
+            ->with(['categoria', 'midias'])
+            ->where('is_disponivel', true)
+            ->get()
+            ->map(fn (Atrativo $place): array => [
+                'place' => $place,
+                'score' => $this->alternativeScore($place, $preferences),
+            ])
+            ->sortByDesc('score')
+            ->take(3)
+            ->map(function (array $candidate): array {
+                /** @var Atrativo $place */
+                $place = $candidate['place'];
+                $media = $place->midias->firstWhere('is_destaque', true) ?? $place->midias->first();
+                $mediaUrl = $media?->url;
+
+                return [
+                    'name' => $place->nome,
+                    'slug' => $place->slug,
+                    'category' => $place->categoria?->nome ?? 'Atrativo oficial',
+                    'duration' => $place->duracao_minutos,
+                    'cost' => $place->custo_medio,
+                    'description' => str($place->descricao ?? 'Atrativo oficial disponível no município.')->limit(120)->toString(),
+                    'image_url' => $mediaUrl
+                        ? (str_starts_with($mediaUrl, 'http://') || str_starts_with($mediaUrl, 'https://') || str_starts_with($mediaUrl, '/')
+                            ? $mediaUrl
+                            : asset('storage/'.$mediaUrl))
+                        : null,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function alternativeScore(Atrativo $place, VisitorPreferencesDTO $preferences): float
+    {
+        $score = 0.0;
+        $categorySlug = $place->categoria?->slug ?? '';
+        $tags = $place->tags ?? [];
+
+        foreach ($preferences->interests as $interest) {
+            if ($categorySlug === $interest || in_array($interest, $tags, true)) {
+                $score += 30;
+            }
+        }
+
+        foreach ($preferences->moods as $mood) {
+            if (in_array($mood, $tags, true)) {
+                $score += 10;
+            }
+        }
+
+        if ($preferences->hasChildren === true && $place->adequado_criancas) {
+            $score += 12;
+        }
+
+        if ($preferences->budget !== null && $place->custo_medio <= $preferences->budget) {
+            $score += 8;
+        }
+
+        if ($preferences->availableMinutes !== null && $place->duracao_minutos <= $preferences->availableMinutes) {
+            $score += 8;
+        }
+
+        return $score;
     }
 }
