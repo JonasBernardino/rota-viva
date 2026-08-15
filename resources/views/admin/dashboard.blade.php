@@ -4,9 +4,195 @@
 
 @section('content')
 
+    <style>
+        /*
+        |--------------------------------------------------------------------------
+        | Controles do cabeçalho do Dashboard
+        |--------------------------------------------------------------------------
+        */
+
+        .admin-dashboard-header {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .admin-dashboard-header__actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 1rem;
+            width: 100%;
+            max-width: 760px;
+        }
+
+        .dashboard-period {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+            margin: 0;
+        }
+
+        .dashboard-period label {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .dashboard-period__select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .dashboard-period__select-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 1.15rem;
+            width: 8px;
+            height: 8px;
+
+            border-right: 2px solid #164b3f;
+            border-bottom: 2px solid #164b3f;
+
+            transform: translateY(-65%) rotate(45deg);
+
+            pointer-events: none;
+        }
+
+        .dashboard-period select {
+            appearance: none;
+            -webkit-appearance: none;
+
+            width: 100%;
+            height: 52px;
+
+            padding: 0 3rem 0 1.1rem;
+
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 12px;
+
+            background: rgba(255, 255, 255, 0.96);
+
+            color: #163d35;
+
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            outline: none;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .dashboard-period select:hover {
+            border-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .dashboard-period select:focus {
+            border-color: #e16446;
+
+            box-shadow:
+                0 0 0 3px rgba(225, 100, 70, 0.18);
+        }
+
+        .admin-dashboard-logout-form {
+            margin: 0;
+            flex: 0 0 auto;
+        }
+
+        .admin-logout-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.65rem;
+
+            height: 52px;
+
+            padding: 0 1.4rem;
+
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+
+            background: rgba(5, 54, 45, 0.35);
+
+            color: #fff;
+
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+
+            white-space: nowrap;
+
+            cursor: pointer;
+
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .admin-logout-button svg {
+            width: 18px;
+            height: 18px;
+
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .admin-logout-button:hover {
+            background: rgba(225, 100, 70, 0.92);
+            border-color: #e16446;
+
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 8px 24px rgba(0, 0, 0, 0.16);
+        }
+
+        .admin-logout-button:focus-visible {
+            outline: 3px solid rgba(255, 255, 255, 0.45);
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 767px) {
+            .admin-dashboard-header__actions {
+                flex-direction: column;
+                align-items: stretch;
+
+                max-width: none;
+            }
+
+            .admin-dashboard-logout-form {
+                width: 100%;
+            }
+
+            .admin-logout-button {
+                width: 100%;
+            }
+        }
+    </style>
+
+
     {{-- =========================================================
          CABEÇALHO
     ========================================================== --}}
+
     <section class="page-hero page-hero--compact">
 
         <div class="page-container page-hero__content">
@@ -14,6 +200,7 @@
             <div class="admin-dashboard-header">
 
                 <div>
+
                     <p class="eyebrow">
                         Gestão Municipal ·
                         {{ $currentTenant->name ?? 'Município' }}
@@ -28,7 +215,13 @@
                         a distribuição da demanda turística e oportunidades
                         de melhoria na oferta do território.
                     </p>
+
                 </div>
+
+
+                {{-- =====================================================
+                     FILTROS E AÇÕES
+                ====================================================== --}}
 
                 <div class="admin-dashboard-header__actions">
 
@@ -37,57 +230,83 @@
                         action="{{ route('admin.dashboard') }}"
                         class="dashboard-period"
                     >
+
                         <label for="period">
                             Período
                         </label>
 
-                        <select
-                            id="period"
-                            name="period"
-                            onchange="this.form.submit()"
-                        >
-                            <option
-                                value="7"
-                                @selected($period === '7')
-                            >
-                                Últimos 7 dias
-                            </option>
+                        <div class="dashboard-period__select-wrapper">
 
-                            <option
-                                value="30"
-                                @selected($period === '30')
+                            <select
+                                id="period"
+                                name="period"
+                                onchange="this.form.submit()"
+                                aria-label="Selecionar período do dashboard"
                             >
-                                Últimos 30 dias
-                            </option>
 
-                            <option
-                                value="90"
-                                @selected($period === '90')
-                            >
-                                Últimos 90 dias
-                            </option>
+                                <option
+                                    value="7"
+                                    @selected($period === '7')
+                                >
+                                    Últimos 7 dias
+                                </option>
 
-                            <option
-                                value="all"
-                                @selected($period === 'all')
-                            >
-                                Todo o período
-                            </option>
-                        </select>
+                                <option
+                                    value="30"
+                                    @selected($period === '30')
+                                >
+                                    Últimos 30 dias
+                                </option>
+
+                                <option
+                                    value="90"
+                                    @selected($period === '90')
+                                >
+                                    Últimos 90 dias
+                                </option>
+
+                                <option
+                                    value="all"
+                                    @selected($period === 'all')
+                                >
+                                    Todo o período
+                                </option>
+
+                            </select>
+
+                        </div>
+
                     </form>
+
 
                     <form
                         action="{{ route('logout') }}"
                         method="POST"
+                        class="admin-dashboard-logout-form"
                     >
+
                         @csrf
 
                         <button
                             type="submit"
                             class="admin-logout-button"
                         >
-                            Encerrar sessão
+
+                            <svg
+                                aria-hidden="true"
+                                viewBox="0 0 24 24"
+                            >
+                                <path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"></path>
+                                <path d="M14 8l4 4-4 4"></path>
+                                <path d="M9 12h9"></path>
+                            </svg>
+
+                            <span>
+                                Encerrar sessão
+                            </span>
+
                         </button>
+
                     </form>
 
                 </div>
@@ -113,6 +332,7 @@
                 <div class="dashboard-section-heading">
 
                     <div>
+
                         <p class="eyebrow">
                             Operação
                         </p>
@@ -125,6 +345,7 @@
                             Indicadores calculados a partir das rotas
                             realmente solicitadas pelos visitantes.
                         </p>
+
                     </div>
 
                 </div>
@@ -132,7 +353,6 @@
 
                 <div class="dashboard-kpis">
 
-                    {{-- Rotas criadas --}}
                     <article class="dashboard-kpi">
 
                         <span>
@@ -155,7 +375,6 @@
                     </article>
 
 
-                    {{-- Demanda não atendida --}}
                     <article class="dashboard-kpi dashboard-kpi--attention">
 
                         <span>
@@ -178,7 +397,6 @@
                     </article>
 
 
-                    {{-- Rotas adaptadas --}}
                     <article class="dashboard-kpi">
 
                         <span>
@@ -202,7 +420,6 @@
                     </article>
 
 
-                    {{-- Custo médio --}}
                     <article class="dashboard-kpi">
 
                         <span>
@@ -226,7 +443,6 @@
                     </article>
 
 
-                    {{-- Duração média --}}
                     <article class="dashboard-kpi">
 
                         <span>
@@ -256,6 +472,7 @@
                 <div class="dashboard-section-heading">
 
                     <div>
+
                         <p class="eyebrow">
                             Comportamento
                         </p>
@@ -268,6 +485,7 @@
                             Preferências identificadas a partir das
                             solicitações em linguagem natural.
                         </p>
+
                     </div>
 
                 </div>
@@ -275,7 +493,6 @@
 
                 <div class="dashboard-two-columns">
 
-                    {{-- Interesses --}}
                     <article class="dashboard-panel">
 
                         <h3>
@@ -320,7 +537,6 @@
                     </article>
 
 
-                    {{-- Perfil/moods --}}
                     <article class="dashboard-panel">
 
                         <h3>
@@ -446,7 +662,6 @@
 
                 <div class="dashboard-two-columns">
 
-                    {{-- Top atrativos --}}
                     <article class="dashboard-panel">
 
                         <p class="eyebrow">
@@ -474,7 +689,11 @@
 
                                     <strong>
                                         {{ $place['count'] }}
-                                        {{ $place['count'] === 1 ? 'rota' : 'rotas' }}
+
+                                        {{ $place['count'] === 1
+                                            ? 'rota'
+                                            : 'rotas'
+                                        }}
                                     </strong>
 
                                 </li>
@@ -492,7 +711,6 @@
                     </article>
 
 
-                    {{-- Demanda não atendida --}}
                     <article
                         class="
                             dashboard-panel

@@ -5,9 +5,9 @@ namespace App\Services\Analytics;
 use App\DTOs\AdaptedItineraryDTO;
 use App\DTOs\VisitorPreferencesDTO;
 use App\Enums\JourneyEventType;
-use App\Models\Roteiro;
-use App\Models\JourneyEvent;
 use App\Models\AdaptacaoRota;
+use App\Models\JourneyEvent;
+use App\Models\Roteiro;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -35,17 +35,23 @@ class JourneyAnalyticsService
         $this->record(
             JourneyEventType::ROUTE_CREATED,
             [
-                'itinerary_id' => $itinerary->id,
+                /*
+                 * Mantemos o payload analítico em inglês,
+                 * mas lemos os campos novos do Model Roteiro.
+                 */
+                'itinerary_id' =>
+                    $itinerary->id,
 
                 'total_duration_minutes' =>
-                    $itinerary->total_duration_minutes,
+                    $itinerary->duracao_total_minutos,
 
                 'total_estimated_cost' =>
-                    $itinerary->total_estimated_cost,
+                    $itinerary->custo_total_estimado,
 
-                'preferences' => $this->preferencesPayload(
-                    $preferences
-                ),
+                'preferences' =>
+                    $this->preferencesPayload(
+                        $preferences
+                    ),
             ]
         );
     }
@@ -57,11 +63,13 @@ class JourneyAnalyticsService
         $this->record(
             JourneyEventType::ROUTE_NOT_FOUND,
             [
-                'reason' => $reason,
+                'reason' =>
+                    $reason,
 
-                'preferences' => $this->preferencesPayload(
-                    $preferences
-                ),
+                'preferences' =>
+                    $this->preferencesPayload(
+                        $preferences
+                    ),
             ]
         );
     }
@@ -73,14 +81,20 @@ class JourneyAnalyticsService
         $this->record(
             JourneyEventType::ROUTE_ADAPTED,
             [
+                /*
+                 * Payload analítico continua em inglês.
+                 *
+                 * O Model AdaptacaoRota, porém,
+                 * usa os campos em português.
+                 */
                 'itinerary_id' =>
-                    $adaptation->itinerary_id,
+                    $adaptation->roteiro_id,
 
                 'adaptation_id' =>
                     $adaptation->id,
 
                 'event' =>
-                    $adaptation->event,
+                    $adaptation->evento,
 
                 'removed_place_ids' =>
                     $adapted->removedPlaceIds,
@@ -101,13 +115,14 @@ class JourneyAnalyticsService
         string $reason
     ): void {
         /*
-         * Não persistimos o texto livre digitado pelo
-         * visitante neste evento.
+         * Não persistimos o texto livre digitado
+         * pelo visitante.
          */
         $this->record(
             JourneyEventType::AI_INTERPRETATION_FAILED,
             [
-                'reason' => $reason,
+                'reason' =>
+                    $reason,
             ]
         );
     }
@@ -151,9 +166,6 @@ class JourneyAnalyticsService
     ): void {
         /*
          * Analytics nunca deve derrubar a jornada.
-         *
-         * Se houver erro nessa gravação, registramos
-         * log e deixamos o fluxo principal continuar.
          */
         try {
             JourneyEvent::create([
@@ -173,8 +185,11 @@ class JourneyAnalyticsService
             Log::warning(
                 'Falha ao registrar evento analítico.',
                 [
-                    'event' => $event->value,
-                    'error' => $exception->getMessage(),
+                    'event' =>
+                        $event->value,
+
+                    'error' =>
+                        $exception->getMessage(),
                 ]
             );
         }
@@ -190,7 +205,8 @@ class JourneyAnalyticsService
             return $uuid;
         }
 
-        $uuid = (string) Str::uuid();
+        $uuid =
+            (string) Str::uuid();
 
         Session::put(
             'rota_viva_journey_uuid',

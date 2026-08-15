@@ -10,9 +10,15 @@ use App\Services\Itinerary\ItineraryPersistenceService;
 use App\Services\Itinerary\ItineraryService;
 use Illuminate\Http\Request;
 use RuntimeException;
+use App\Models\Roteiro;
 
 class ItineraryController extends Controller
 {
+    public function create()
+    {
+        return view('pages.route-builder');
+    }
+
     public function store(
         Request $request,
         AiPreferenceInterpreter $interpreter,
@@ -203,21 +209,13 @@ class ItineraryController extends Controller
         );
     }
 
-    public function show($itinerary)
-    {
-        /*
-        |--------------------------------------------------------------------------
-        | Carrega o roteiro
-        |--------------------------------------------------------------------------
-        |
-        | IMPORTANTE:
-        | Este trecho depende dos nomes finais que seu colega definiu
-        | para Models e relacionamentos.
-        |
-        | Se o seu show() atual já está funcionando após a tradução das
-        | entidades, mantenha o show() atual em vez de substituir por este.
-        |
-        */
+    public function show(
+        Roteiro $itinerary
+    ) {
+        $itinerary->load([
+            'preferencia',
+            'itens.atrativo.categoria',
+        ]);
 
         return view(
             'pages.route-result',

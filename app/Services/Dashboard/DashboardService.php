@@ -3,9 +3,9 @@
 namespace App\Services\Dashboard;
 
 use App\Enums\JourneyEventType;
-use App\Models\Roteiro;
-use App\Models\JourneyEvent;
 use App\Models\AdaptacaoRota;
+use App\Models\JourneyEvent;
+use App\Models\Roteiro;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -105,10 +105,12 @@ class DashboardService
                 ->count();
 
         $created =
-            (clone $itineraries)->count();
+            (clone $itineraries)
+                ->count();
 
         $adapted =
-            (clone $adaptations)->count();
+            (clone $adaptations)
+                ->count();
 
         return [
             'routesCreated' =>
@@ -122,21 +124,23 @@ class DashboardService
 
             'averageCost' =>
                 round(
-                    (float)
-                    ((clone $itineraries)
-                        ->avg(
-                            'total_estimated_cost'
-                        ) ?? 0),
+                    (float) (
+                        (clone $itineraries)
+                            ->avg(
+                                'custo_total_estimado'
+                            ) ?? 0
+                    ),
                     2
                 ),
 
             'averageDuration' =>
                 (int) round(
-                    (float)
-                    ((clone $itineraries)
-                        ->avg(
-                            'total_duration_minutes'
-                        ) ?? 0)
+                    (float) (
+                        (clone $itineraries)
+                            ->avg(
+                                'duracao_total_minutos'
+                            ) ?? 0
+                    )
                 ),
 
             'adaptationRate' =>
@@ -184,7 +188,9 @@ class DashboardService
                 )
                 ->filter();
 
-        return $this->ranking($values);
+        return $this->ranking(
+            $values
+        );
     }
 
     private function topMoods(
@@ -202,13 +208,16 @@ class DashboardService
                 )
                 ->filter();
 
-        return $this->ranking($values);
+        return $this->ranking(
+            $values
+        );
     }
 
     private function ranking(
         Collection $values
     ): array {
-        $total = $values->count();
+        $total =
+            $values->count();
 
         if ($total === 0) {
             return [];
@@ -234,8 +243,7 @@ class DashboardService
 
                     'percentage' =>
                         round(
-                            ($count / $total)
-                            * 100,
+                            ($count / $total) * 100,
                             1
                         ),
                 ]
@@ -259,25 +267,36 @@ class DashboardService
             $this->requestedEvents($from)
             as $event
         ) {
-            $budget = data_get(
-                $event->payload,
-                'preferences.budget'
-            );
+            $budget =
+                data_get(
+                    $event->payload,
+                    'preferences.budget'
+                );
 
             if ($budget === null) {
-                $buckets['Não informado']++;
+                $buckets[
+                    'Não informado'
+                ]++;
 
                 continue;
             }
 
             if ($budget <= 50) {
-                $buckets['Até R$ 50']++;
+                $buckets[
+                    'Até R$ 50'
+                ]++;
             } elseif ($budget <= 150) {
-                $buckets['R$ 51–150']++;
+                $buckets[
+                    'R$ 51–150'
+                ]++;
             } elseif ($budget <= 300) {
-                $buckets['R$ 151–300']++;
+                $buckets[
+                    'R$ 151–300'
+                ]++;
             } else {
-                $buckets['Acima de R$ 300']++;
+                $buckets[
+                    'Acima de R$ 300'
+                ]++;
             }
         }
 
@@ -301,25 +320,36 @@ class DashboardService
             $this->requestedEvents($from)
             as $event
         ) {
-            $minutes = data_get(
-                $event->payload,
-                'preferences.available_minutes'
-            );
+            $minutes =
+                data_get(
+                    $event->payload,
+                    'preferences.available_minutes'
+                );
 
             if ($minutes === null) {
-                $buckets['Não informado']++;
+                $buckets[
+                    'Não informado'
+                ]++;
 
                 continue;
             }
 
             if ($minutes <= 120) {
-                $buckets['Até 2h']++;
+                $buckets[
+                    'Até 2h'
+                ]++;
             } elseif ($minutes <= 240) {
-                $buckets['2h–4h']++;
+                $buckets[
+                    '2h–4h'
+                ]++;
             } elseif ($minutes <= 360) {
-                $buckets['4h–6h']++;
+                $buckets[
+                    '4h–6h'
+                ]++;
             } else {
-                $buckets['Mais de 6h']++;
+                $buckets[
+                    'Mais de 6h'
+                ]++;
             }
         }
 
@@ -331,19 +361,26 @@ class DashboardService
     private function bucketResult(
         array $buckets
     ): array {
-        $total = array_sum($buckets);
+        $total =
+            array_sum(
+                $buckets
+            );
 
-        return collect($buckets)
+        return collect(
+            $buckets
+        )
             ->map(
                 fn ($count, $label) => [
-                    'label' => $label,
-                    'count' => $count,
+                    'label' =>
+                        $label,
+
+                    'count' =>
+                        $count,
 
                     'percentage' =>
                         $total > 0
                             ? round(
-                                ($count / $total)
-                                * 100,
+                                ($count / $total) * 100,
                                 1
                             )
                             : 0,
@@ -357,39 +394,40 @@ class DashboardService
         ?Carbon $from
     ): array {
         return DB::table(
-            'itinerary_items as item'
+            'itens_roteiro as item'
         )
             ->join(
-                'itineraries as itinerary',
-                'itinerary.id',
+                'roteiros as roteiro',
+                'roteiro.id',
                 '=',
-                'item.itinerary_id'
+                'item.roteiro_id'
             )
             ->join(
-                'places as place',
-                'place.id',
+                'atrativos as atrativo',
+                'atrativo.id',
                 '=',
-                'item.place_id'
+                'item.atrativo_id'
             )
             ->when(
                 $from,
                 fn ($query) =>
                     $query->where(
-                        'itinerary.created_at',
+                        'roteiro.created_at',
                         '>=',
                         $from
                     )
             )
             ->select(
-                'place.id',
-                'place.name',
+                'atrativo.id',
+                'atrativo.nome',
+
                 DB::raw(
                     'COUNT(*) AS routes_count'
                 )
             )
             ->groupBy(
-                'place.id',
-                'place.name'
+                'atrativo.id',
+                'atrativo.nome'
             )
             ->orderByDesc(
                 'routes_count'
@@ -402,7 +440,7 @@ class DashboardService
                         $item->id,
 
                     'name' =>
-                        $item->name,
+                        $item->nome,
 
                     'count' =>
                         (int)
@@ -416,50 +454,50 @@ class DashboardService
         ?Carbon $from
     ): array {
         return DB::table(
-            'itinerary_items as item'
+            'itens_roteiro as item'
         )
             ->join(
-                'itineraries as itinerary',
-                'itinerary.id',
+                'roteiros as roteiro',
+                'roteiro.id',
                 '=',
-                'item.itinerary_id'
+                'item.roteiro_id'
             )
             ->join(
-                'places as place',
-                'place.id',
+                'atrativos as atrativo',
+                'atrativo.id',
                 '=',
-                'item.place_id'
+                'item.atrativo_id'
             )
             ->whereNotNull(
-                'place.latitude'
+                'atrativo.latitude'
             )
             ->whereNotNull(
-                'place.longitude'
+                'atrativo.longitude'
             )
             ->when(
                 $from,
                 fn ($query) =>
                     $query->where(
-                        'itinerary.created_at',
+                        'roteiro.created_at',
                         '>=',
                         $from
                     )
             )
             ->select(
-                'place.id',
-                'place.name',
-                'place.latitude',
-                'place.longitude',
+                'atrativo.id',
+                'atrativo.nome',
+                'atrativo.latitude',
+                'atrativo.longitude',
 
                 DB::raw(
                     'COUNT(*) AS intensity'
                 )
             )
             ->groupBy(
-                'place.id',
-                'place.name',
-                'place.latitude',
-                'place.longitude'
+                'atrativo.id',
+                'atrativo.nome',
+                'atrativo.latitude',
+                'atrativo.longitude'
             )
             ->get()
             ->map(
@@ -468,7 +506,7 @@ class DashboardService
                         $item->id,
 
                     'name' =>
-                        $item->name,
+                        $item->nome,
 
                     'latitude' =>
                         (float)
@@ -491,54 +529,54 @@ class DashboardService
         string $action
     ): array {
         return DB::table(
-            'route_adaptation_items as item'
+            'itens_adaptacao_rota as item'
         )
             ->join(
-                'route_adaptations as adaptation',
-                'adaptation.id',
+                'adaptacoes_rota as adaptacao',
+                'adaptacao.id',
                 '=',
-                'item.route_adaptation_id'
+                'item.adaptacao_rota_id'
             )
             ->join(
-                'places as place',
-                'place.id',
+                'atrativos as atrativo',
+                'atrativo.id',
                 '=',
-                'item.place_id'
+                'item.atrativo_id'
             )
             ->where(
-                'item.action',
+                'item.acao',
                 $action
             )
             ->whereNotNull(
-                'place.latitude'
+                'atrativo.latitude'
             )
             ->whereNotNull(
-                'place.longitude'
+                'atrativo.longitude'
             )
             ->when(
                 $from,
                 fn ($query) =>
                     $query->where(
-                        'adaptation.created_at',
+                        'adaptacao.created_at',
                         '>=',
                         $from
                     )
             )
             ->select(
-                'place.id',
-                'place.name',
-                'place.latitude',
-                'place.longitude',
+                'atrativo.id',
+                'atrativo.nome',
+                'atrativo.latitude',
+                'atrativo.longitude',
 
                 DB::raw(
                     'COUNT(*) AS intensity'
                 )
             )
             ->groupBy(
-                'place.id',
-                'place.name',
-                'place.latitude',
-                'place.longitude'
+                'atrativo.id',
+                'atrativo.nome',
+                'atrativo.latitude',
+                'atrativo.longitude'
             )
             ->get()
             ->map(
@@ -547,7 +585,7 @@ class DashboardService
                         $item->id,
 
                     'name' =>
-                        $item->name,
+                        $item->nome,
 
                     'latitude' =>
                         (float)
@@ -586,38 +624,43 @@ class DashboardService
                 ->get();
 
         return $events
-            ->map(function (
-                JourneyEvent $event
-            ) {
-                $interests = data_get(
-                    $event->payload,
-                    'preferences.interests',
-                    []
-                );
+            ->map(
+                function (
+                    JourneyEvent $event
+                ) {
+                    $interests =
+                        data_get(
+                            $event->payload,
+                            'preferences.interests',
+                            []
+                        );
 
-                $moods = data_get(
-                    $event->payload,
-                    'preferences.moods',
-                    []
-                );
+                    $moods =
+                        data_get(
+                            $event->payload,
+                            'preferences.moods',
+                            []
+                        );
 
-                $intensity = data_get(
-                    $event->payload,
-                    'preferences.intensity'
-                );
+                    $intensity =
+                        data_get(
+                            $event->payload,
+                            'preferences.intensity'
+                        );
 
-                $primary =
-                    $interests[0]
-                    ?? $moods[0]
-                    ?? $intensity
-                    ?? 'Sem categoria';
+                    $primary =
+                        $interests[0]
+                        ?? $moods[0]
+                        ?? $intensity
+                        ?? 'Sem categoria';
 
-                return ucfirst(
-                    mb_strtolower(
-                        $primary
-                    )
-                );
-            })
+                    return ucfirst(
+                        mb_strtolower(
+                            $primary
+                        )
+                    );
+                }
+            )
             ->countBy()
             ->sortDesc()
             ->take(6)
