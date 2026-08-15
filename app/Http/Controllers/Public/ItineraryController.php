@@ -36,7 +36,7 @@ class ItineraryController extends Controller
             ],
         ]);
 
-        // 1. Gemini interpreta linguagem natural.
+        // 1. IA interpreta linguagem natural. Se ela falhar, o interpretador usa fallback local.
         try {
             $preferences = $interpreter->interpret(
                 $data['description']
@@ -53,11 +53,22 @@ class ItineraryController extends Controller
         }
 
         // 2. Laravel seleciona os locais.
-        $generated = $itineraryService->generate(
-            $preferences
-        );
+        try {
+            $generated = $itineraryService->generate(
+                $preferences
+            );
+        } catch (RuntimeException $exception) {
+            report($exception);
 
-        // 3. Gemini explica o resultado.
+            return back()
+                ->withInput()
+                ->with(
+                    'ai_error',
+                    'Não encontramos atrativos compatíveis com essa busca. Tente informar o tipo de experiência, tempo disponível ou interesse principal, como cultura, natureza ou gastronomia.'
+                );
+        }
+
+        // 3. IA explica o resultado. Se ela falhar, o escritor usa fallback local.
         $narrative = $writer->write(
             $preferences,
             $generated

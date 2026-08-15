@@ -1,6 +1,7 @@
 import '../css/app.css';
 
 import * as bootstrap from 'bootstrap';
+import './route.builder';
 import { initializeRouteMaps } from './maps/route-map';
 
 window.bootstrap = bootstrap;

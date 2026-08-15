@@ -39,7 +39,13 @@ return [
 
         'gemini' => [
             'api_key' => env('GEMINI_API_KEY'),
-            'model' => env('GEMINI_MODEL'),
+            'model' => env('GEMINI_MODEL', 'gemini-3-flash-preview'),
+        ],
+
+        'ollama' => [
+            'base_url' => env('OLLAMA_BASE_URL', 'http://127.0.0.1:11434'),
+            'model' => env('OLLAMA_MODEL', 'qwen2.5-coder'),
+            'timeout' => env('OLLAMA_TIMEOUT', 8),
         ],
     ],
 ];

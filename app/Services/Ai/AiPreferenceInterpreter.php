@@ -4,21 +4,29 @@ namespace App\Services\Ai;
 
 use App\Contracts\AiProvider;
 use App\DTOs\VisitorPreferencesDTO;
+use RuntimeException;
 
 class AiPreferenceInterpreter
 {
     public function __construct(
         private readonly AiProvider $ai,
+        private readonly LocalPreferenceInterpreter $fallback,
     ) {}
 
     public function interpret(
         string $description
     ): VisitorPreferencesDTO {
-        $result = $this->ai->generateStructured(
-            systemPrompt: $this->systemPrompt(),
-            userPrompt: $description,
-            schema: $this->schema(),
-        );
+        try {
+            $result = $this->ai->generateStructured(
+                systemPrompt: $this->systemPrompt(),
+                userPrompt: $description,
+                schema: $this->schema(),
+            );
+        } catch (RuntimeException $exception) {
+            report($exception);
+
+            return $this->fallback->interpret($description);
+        }
 
         return VisitorPreferencesDTO::fromArray($result);
     }

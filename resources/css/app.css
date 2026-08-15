@@ -471,6 +471,79 @@ input:focus-visible {
     justify-self: start;
 }
 
+.route-builder-card .route-cta[disabled] {
+    cursor: wait;
+    opacity: 0.78;
+}
+
+.route-builder-status {
+    max-width: 42rem;
+    margin: 0.25rem 0 0;
+    color: var(--forest);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.route-builder-loading {
+    position: fixed;
+    z-index: 9999;
+    inset: 0;
+    display: grid;
+    padding: 1.25rem;
+    background: rgba(5, 46, 37, 0.78);
+    backdrop-filter: blur(5px);
+    place-items: center;
+}
+
+.route-builder-loading[hidden] {
+    display: none;
+}
+
+.route-builder-loading__panel {
+    display: grid;
+    width: min(100%, 430px);
+    gap: 0.85rem;
+    padding: clamp(2rem, 5vw, 3rem);
+    color: var(--ink);
+    background: var(--linen);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+    text-align: center;
+}
+
+.route-builder-loading__panel .eyebrow {
+    margin-bottom: 0;
+}
+
+.route-builder-loading__panel strong {
+    color: var(--forest);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.55rem, 4vw, 2.25rem);
+    font-weight: 400;
+    line-height: 1.1;
+}
+
+.route-builder-loading__panel span:last-child {
+    color: var(--muted);
+    line-height: 1.55;
+}
+
+.route-builder-loading__spinner {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 0.3rem;
+    border: 4px solid rgba(7, 63, 50, 0.16);
+    border-top-color: var(--forest);
+    border-radius: 50%;
+    animation: route-builder-spin 850ms linear infinite;
+}
+
+@keyframes route-builder-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .login-placeholder h1 {
     color: var(--forest);
     font-family: Georgia, "Times New Roman", serif;

@@ -7,10 +7,12 @@ use App\Contracts\AtrativoRepository;
 use App\Models\User;
 use App\Repositories\EloquentAtrativoRepository;
 use App\Services\Ai\GeminiProvider;
+use App\Services\Ai\OllamaProvider;
 use App\Services\Tenant\TenantManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use InvalidArgumentException;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,10 +25,20 @@ class AppServiceProvider extends ServiceProvider
             return new TenantManager;
         });
 
-        $this->app->bind(
-            AiProvider::class,
-            GeminiProvider::class
-        );
+        $this->app->bind(AiProvider::class, function (): AiProvider {
+            return match (config('services.ai.provider', 'gemini')) {
+                'gemini' => new GeminiProvider(
+                    apiKey: (string) config('services.ai.gemini.api_key'),
+                    model: (string) config('services.ai.gemini.model', 'gemini-3-flash-preview'),
+                ),
+                'ollama' => new OllamaProvider(
+                    baseUrl: (string) config('services.ai.ollama.base_url', 'http://127.0.0.1:11434'),
+                    model: (string) config('services.ai.ollama.model', 'qwen2.5-coder'),
+                    timeoutSeconds: (int) config('services.ai.ollama.timeout', 8),
+                ),
+                default => throw new InvalidArgumentException('AI_PROVIDER invalido. Use gemini ou ollama.'),
+            };
+        });
 
         $this->app->bind(
             AtrativoRepository::class,

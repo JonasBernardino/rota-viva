@@ -6,6 +6,7 @@ use App\Contracts\AiProvider;
 use App\Models\Roteiro;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
+use RuntimeException;
 use Tests\TestCase;
 
 class ItineraryWorkflowTest extends TestCase
@@ -25,7 +26,8 @@ class ItineraryWorkflowTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Como você quer viver a cidade hoje?')
-            ->assertSee('Continuar');
+            ->assertSee('Continuar')
+            ->assertSee('Criando sua experiência personalizada');
     }
 
     public function test_creates_itinerary_and_adapts_for_rain(): void
@@ -112,5 +114,30 @@ class ItineraryWorkflowTest extends TestCase
             ->assertSee('Veja como sua rota mudou')
             ->assertSee('Antes')
             ->assertSee('Agora');
+    }
+
+    public function test_creates_itinerary_with_local_preferences_when_ai_is_unavailable(): void
+    {
+        $mockAi = Mockery::mock(AiProvider::class);
+
+        $mockAi->shouldReceive('generateStructured')
+            ->andThrow(new RuntimeException('Ollama timeout'));
+
+        $this->app->instance(AiProvider::class, $mockAi);
+
+        $response = $this->post(route('routes.store'), [
+            'description' => 'Quero cultura e tranquilidade, estou com uma criança, tenho quatro horas e orçamento de R$ 150.',
+        ]);
+
+        $itinerary = Roteiro::latest('id')->first();
+
+        $this->assertNotNull($itinerary);
+
+        $response->assertRedirect(route('routes.show', $itinerary));
+
+        $this->get(route('routes.show', $itinerary))
+            ->assertOk()
+            ->assertSee('Uma experiência do seu jeito')
+            ->assertSee('Sua realidade mudou?');
     }
 }
