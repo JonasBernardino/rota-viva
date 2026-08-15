@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToMunicipality;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'nome',
@@ -29,7 +30,7 @@ use Illuminate\Database\Eloquent\Model;
 ])]
 class Estabelecimento extends Model
 {
-    use BelongsToMunicipality, HasFactory;
+    use BelongsToMunicipality, HasFactory, SoftDeletes;
 
     protected $table = 'estabelecimentos';
 

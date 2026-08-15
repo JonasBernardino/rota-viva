@@ -7,10 +7,12 @@ use App\Models\Atrativo;
 use App\Models\Categoria;
 use App\Models\Estabelecimento;
 use App\Models\Evento;
+use App\Models\LogAuditoria;
 use App\Models\MidiaAtrativo;
 use App\Models\PreferenciaVisitante;
 use App\Models\Roteiro;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -73,6 +75,14 @@ class AdminController extends Controller
             };
 
             $this->storeImageForItem($request, $module, $item);
+
+            $this->audit(
+                request: $request,
+                action: 'created',
+                item: $item->refresh(),
+                before: null,
+                after: $this->auditSnapshot($item),
+            );
         });
 
         return redirect()
@@ -92,7 +102,9 @@ class AdminController extends Controller
         $item = $this->findItem($module, $id);
         $data = $this->validatedData($request, $module, $id);
 
-        DB::transaction(function () use ($data, $item, $module): void {
+        DB::transaction(function () use ($data, $item, $module, $request): void {
+            $before = $this->auditSnapshot($item);
+
             match ($this->modelTypeForModule($module)) {
                 'place' => $item->update($this->placePayload($data, $module)),
                 'business' => $item->update($this->businessPayload($data, $module)),
@@ -100,7 +112,15 @@ class AdminController extends Controller
                 'itinerary' => $item->update($this->itineraryPayload($data)),
             };
 
-            $this->storeImageForItem(request(), $module, $item);
+            $this->storeImageForItem($request, $module, $item);
+
+            $this->audit(
+                request: $request,
+                action: 'updated',
+                item: $item->refresh(),
+                before: $before,
+                after: $this->auditSnapshot($item),
+            );
         });
 
         return redirect()
@@ -110,11 +130,25 @@ class AdminController extends Controller
 
     public function destroy(int $id, string $module): RedirectResponse
     {
-        $this->findItem($module, $id)->delete();
+        $item = $this->findItem($module, $id);
+
+        DB::transaction(function () use ($item): void {
+            $before = $this->auditSnapshot($item);
+
+            $item->delete();
+
+            $this->audit(
+                request: request(),
+                action: 'deleted',
+                item: $item,
+                before: $before,
+                after: $this->auditSnapshot($item),
+            );
+        });
 
         return redirect()
             ->route('admin.'.$module.'.index')
-            ->with('status', 'Cadastro removido com sucesso.');
+            ->with('status', 'Cadastro arquivado com sucesso.');
     }
 
     /**
@@ -452,6 +486,38 @@ class AdminController extends Controller
         $item->forceFill([
             $column => $path,
         ])->save();
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $before
+     * @param  array<string, mixed>|null  $after
+     */
+    private function audit(
+        Request $request,
+        string $action,
+        Model $item,
+        ?array $before,
+        ?array $after,
+    ): void {
+        LogAuditoria::create([
+            'usuario_id' => $request->user()?->id,
+            'acao' => $action,
+            'entidade_tipo' => $item::class,
+            'entidade_id' => $item->getKey(),
+            'valores_anteriores' => $before,
+            'valores_novos' => $after,
+            'ip_address' => $request->ip(),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function auditSnapshot(Model $item): array
+    {
+        return collect($item->getAttributes())
+            ->except(['updated_at'])
+            ->all();
     }
 
     private function deleteStoredAsset(?string $path): void

@@ -6,6 +6,7 @@ use App\Models\Atrativo;
 use App\Models\Categoria;
 use App\Models\Estabelecimento;
 use App\Models\Evento;
+use App\Models\LogAuditoria;
 use App\Models\MidiaAtrativo;
 use App\Models\Municipio;
 use App\Models\Roteiro;
@@ -116,7 +117,8 @@ class AdminCrudTest extends TestCase
             ->delete(route('admin.tourist-spots.destroy', $place->id))
             ->assertRedirect(route('admin.tourist-spots.index'));
 
-        $this->assertDatabaseMissing('atrativos', ['id' => $place->id]);
+        $this->assertSoftDeleted('atrativos', ['id' => $place->id]);
+        $this->assertAdminAuditExists('deleted', Atrativo::class, $place->id);
     }
 
     public function test_manager_can_create_update_and_delete_establishment(): void
@@ -170,7 +172,8 @@ class AdminCrudTest extends TestCase
             ->delete(route('admin.establishments.destroy', $business->id))
             ->assertRedirect(route('admin.establishments.index'));
 
-        $this->assertDatabaseMissing('estabelecimentos', ['id' => $business->id]);
+        $this->assertSoftDeleted('estabelecimentos', ['id' => $business->id]);
+        $this->assertAdminAuditExists('deleted', Estabelecimento::class, $business->id);
     }
 
     public function test_manager_can_create_update_and_delete_event(): void
@@ -220,7 +223,8 @@ class AdminCrudTest extends TestCase
             ->delete(route('admin.events.destroy', $event->id))
             ->assertRedirect(route('admin.events.index'));
 
-        $this->assertDatabaseMissing('eventos', ['id' => $event->id]);
+        $this->assertSoftDeleted('eventos', ['id' => $event->id]);
+        $this->assertAdminAuditExists('deleted', Evento::class, $event->id);
     }
 
     public function test_manager_can_create_update_and_delete_official_itinerary(): void
@@ -258,6 +262,71 @@ class AdminCrudTest extends TestCase
             ->delete(route('admin.official-itineraries.destroy', $itinerary->id))
             ->assertRedirect(route('admin.official-itineraries.index'));
 
-        $this->assertDatabaseMissing('roteiros', ['id' => $itinerary->id]);
+        $this->assertSoftDeleted('roteiros', ['id' => $itinerary->id]);
+        $this->assertAdminAuditExists('deleted', Roteiro::class, $itinerary->id);
+    }
+
+    public function test_manager_actions_are_registered_in_audit_log(): void
+    {
+        Storage::fake('public');
+
+        $category = Categoria::firstOrFail();
+
+        $this->actingAs($this->manager)
+            ->post(route('admin.tourist-spots.store'), [
+                'categoria_id' => $category->id,
+                'nome' => 'Casa da Memória Auditada',
+                'slug' => 'casa-da-memoria-auditada',
+                'descricao' => 'Cadastro criado para auditoria.',
+                'latitude' => -6.904,
+                'longitude' => -34.864,
+                'duracao_minutos' => 50,
+                'custo_medio' => 0,
+                'intensidade' => 'low',
+                'tags' => 'auditoria',
+                'is_disponivel' => 1,
+            ])
+            ->assertRedirect(route('admin.tourist-spots.index'));
+
+        $place = Atrativo::where('slug', 'casa-da-memoria-auditada')->firstOrFail();
+
+        $this->assertAdminAuditExists('created', Atrativo::class, $place->id);
+
+        $this->actingAs($this->manager)
+            ->put(route('admin.tourist-spots.update', $place->id), [
+                'categoria_id' => $category->id,
+                'nome' => 'Casa da Memória Auditada Atualizada',
+                'slug' => 'casa-da-memoria-auditada',
+                'descricao' => 'Cadastro atualizado para auditoria.',
+                'latitude' => -6.904,
+                'longitude' => -34.864,
+                'duracao_minutos' => 55,
+                'custo_medio' => 0,
+                'intensidade' => 'low',
+                'tags' => 'auditoria',
+                'is_disponivel' => 1,
+            ])
+            ->assertRedirect(route('admin.tourist-spots.index'));
+
+        $this->assertAdminAuditExists('updated', Atrativo::class, $place->id);
+
+        $audit = LogAuditoria::where('acao', 'updated')
+            ->where('entidade_tipo', Atrativo::class)
+            ->where('entidade_id', $place->id)
+            ->latest('criado_em')
+            ->firstOrFail();
+
+        $this->assertSame('Casa da Memória Auditada', $audit->valores_anteriores['nome']);
+        $this->assertSame('Casa da Memória Auditada Atualizada', $audit->valores_novos['nome']);
+    }
+
+    private function assertAdminAuditExists(string $action, string $entityType, int $entityId): void
+    {
+        $this->assertDatabaseHas('logs_auditoria', [
+            'usuario_id' => $this->manager->id,
+            'acao' => $action,
+            'entidade_tipo' => $entityType,
+            'entidade_id' => $entityId,
+        ]);
     }
 }
