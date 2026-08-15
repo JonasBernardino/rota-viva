@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMunicipality;
+use App\Services\Tenant\TenantManager;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Atrativo extends Model
 {
-    use HasFactory;
+    use BelongsToMunicipality, HasFactory;
 
     protected $table = 'atrativos';
 
@@ -108,12 +110,22 @@ class Atrativo extends Model
 
     public function recursosAcessibilidade(): BelongsToMany
     {
-        return $this->belongsToMany(
+        $relation = $this->belongsToMany(
             RecursoAcessibilidade::class,
             'atrativo_recursos_acessibilidade',
             'atrativo_id',
             'recurso_acessibilidade_id'
         );
+
+        $municipality = app(TenantManager::class)->current();
+
+        if ($municipality !== null) {
+            $relation
+                ->wherePivot('municipio_id', $municipality->id)
+                ->withPivotValue('municipio_id', $municipality->id);
+        }
+
+        return $relation;
     }
 
     public function accessibilityFeatures(): BelongsToMany

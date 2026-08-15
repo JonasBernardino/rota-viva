@@ -7,7 +7,6 @@ use App\Models\Categoria;
 use App\Models\Municipio;
 use App\Services\Tenant\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class TenantResolutionTest extends TestCase
@@ -48,12 +47,8 @@ class TenantResolutionTest extends TestCase
         $response->assertViewHas('currentTenant', fn (?Municipio $tenant) => $tenant?->slug === 'lucena');
     }
 
-    public function test_it_isolates_data_between_tenant_schemas(): void
+    public function test_it_isolates_data_between_municipalities_by_column_scope(): void
     {
-        if (DB::connection()->getDriverName() !== 'pgsql') {
-            $this->markTestSkipped('PostgreSQL schema isolation requires a pgsql database driver.');
-        }
-
         // 1. Check Lucena has places from seeder
         $this->tenantManager->switchTo($this->lucena);
         $lucenaPlaceCount = Atrativo::count();
@@ -71,7 +66,7 @@ class TenantResolutionTest extends TestCase
             'fuso_horario' => 'America/Fortaleza',
         ], ['cabedelo.rotaviva.com.br']);
 
-        // 3. Switch to Cabedelo schema
+        // 3. Switch to Cabedelo tenant context
         $this->tenantManager->switchTo($cabedelo);
         $this->assertSame(0, Atrativo::count());
         $this->assertFalse(Atrativo::where('slug', 'igreja-nossa-senhora-da-guia')->exists());
@@ -98,17 +93,15 @@ class TenantResolutionTest extends TestCase
 
         $this->assertSame(1, Atrativo::count());
         $this->assertTrue(Atrativo::where('slug', 'fortaleza-santa-catarina')->exists());
+        $this->assertSame($cabedelo->id, Atrativo::firstOrFail()->municipio_id);
 
         // 5. Switch back to Lucena and verify Cabedelo place is NOT present
         $this->tenantManager->switchTo($this->lucena);
         $this->assertSame($lucenaPlaceCount, Atrativo::count());
         $this->assertFalse(Atrativo::where('slug', 'fortaleza-santa-catarina')->exists());
-
-        // Cleanup second schema
-        $this->tenantManager->dropSchema('tenant_cabedelo');
     }
 
-    public function test_it_resets_search_path_after_request_terminates(): void
+    public function test_it_resets_current_tenant_context_after_request_terminates(): void
     {
         $this->withHeader('X-Tenant', 'lucena')->get(route('home'));
 
@@ -116,10 +109,5 @@ class TenantResolutionTest extends TestCase
         $this->tenantManager->reset();
 
         $this->assertFalse($this->tenantManager->hasTenant());
-
-        if (DB::connection()->getDriverName() === 'pgsql') {
-            $searchPath = DB::selectOne('SHOW search_path')->search_path ?? '';
-            $this->assertStringContainsString('public', $searchPath);
-        }
     }
 }

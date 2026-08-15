@@ -6,6 +6,7 @@ use App\Models\Atrativo;
 use App\Models\Categoria;
 use App\Models\Estabelecimento;
 use App\Models\Evento;
+use App\Models\Municipio;
 use App\Models\Roteiro;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,7 +24,9 @@ class AdminCrudTest extends TestCase
 
         $this->seed();
 
-        $this->manager = User::factory()->manager()->create();
+        $lucena = Municipio::where('slug', 'lucena')->firstOrFail();
+
+        $this->manager = User::factory()->managerFor($lucena)->create();
     }
 
     public function test_manager_can_open_crud_forms(): void

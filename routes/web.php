@@ -3,10 +3,12 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Platform\PlatformController;
 use App\Http\Controllers\Public\AdaptationController;
 use App\Http\Controllers\Public\CatalogController;
 use App\Http\Controllers\Public\CityMapController;
 use App\Http\Controllers\Public\ItineraryController;
+use App\Http\Controllers\Public\MunicipalityController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,6 +20,8 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'home')
     ->name('home');
 
+Route::get('/municipios/selecionar', MunicipalityController::class)
+    ->name('municipalities.select');
 
 /*
 |--------------------------------------------------------------------------
@@ -30,33 +34,28 @@ Route::view('/descubra', 'pages.landing', [
 
     'title' => 'Descubra a cidade',
 
-    'description' =>
-        'Conheça lugares, histórias e paisagens validados pelo município.',
+    'description' => 'Conheça lugares, histórias e paisagens validados pelo município.',
 
     'links' => [
         [
             'route' => 'tourist-spots.index',
             'title' => 'Pontos turísticos',
-            'description' =>
-                'Praias, igrejas, museus, praças, trilhas e patrimônios.',
+            'description' => 'Praias, igrejas, museus, praças, trilhas e patrimônios.',
         ],
 
         [
             'route' => 'culture.index',
             'title' => 'História e cultura',
-            'description' =>
-                'Memórias, comunidades, tradições e expressões culturais.',
+            'description' => 'Memórias, comunidades, tradições e expressões culturais.',
         ],
 
         [
             'route' => 'city-map',
             'title' => 'Mapa da cidade',
-            'description' =>
-                'Visualize os principais locais e planeje seus deslocamentos.',
+            'description' => 'Visualize os principais locais e planeje seus deslocamentos.',
         ],
     ],
 ])->name('discover');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -69,33 +68,28 @@ Route::view('/experiencias', 'pages.landing', [
 
     'title' => 'Experiências',
 
-    'description' =>
-        'Atividades, profissionais e roteiros preparados para diferentes formas de viver a cidade.',
+    'description' => 'Atividades, profissionais e roteiros preparados para diferentes formas de viver a cidade.',
 
     'links' => [
         [
             'route' => 'tours.index',
             'title' => 'Passeios',
-            'description' =>
-                'Atividades guiadas, oficinas e experiências locais.',
+            'description' => 'Atividades guiadas, oficinas e experiências locais.',
         ],
 
         [
             'route' => 'guides.index',
             'title' => 'Guias turísticos',
-            'description' =>
-                'Profissionais cadastrados e validados pelo município.',
+            'description' => 'Profissionais cadastrados e validados pelo município.',
         ],
 
         [
             'route' => 'official-itineraries.index',
             'title' => 'Roteiros oficiais',
-            'description' =>
-                'Percursos temáticos selecionados pela gestão municipal.',
+            'description' => 'Percursos temáticos selecionados pela gestão municipal.',
         ],
     ],
 ])->name('experiences');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -130,7 +124,6 @@ foreach ($catalogs as $routePrefix => $uri) {
         ->name($routePrefix.'.show');
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | Mapa público
@@ -141,7 +134,6 @@ Route::get(
     '/mapa-da-cidade',
     CityMapController::class
 )->name('city-map');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -158,7 +150,6 @@ Route::post(
     '/criar-rota',
     [ItineraryController::class, 'store']
 )->name('routes.store');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -178,7 +169,6 @@ Route::get(
     '/minha-rota/{itinerary}',
     [ItineraryController::class, 'show']
 )->name('routes.show');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -203,7 +193,6 @@ Route::get(
     '/minha-rota/{itinerary}/adaptacoes/{adaptation}',
     [AdaptationController::class, 'show']
 )->name('routes.adaptation.show');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -231,12 +220,18 @@ Route::post(
     [AuthController::class, 'logout']
 )->name('logout');
 
-
 /*
 |--------------------------------------------------------------------------
 | Páginas institucionais
 |--------------------------------------------------------------------------
 */
+
+// Painel da plataforma
+Route::middleware(['auth', 'can:manage-platform'])->prefix('plataforma')->name('platform.')->group(function (): void {
+    Route::get('/', [PlatformController::class, 'dashboard'])->name('dashboard');
+    Route::get('/municipios/novo', [PlatformController::class, 'createMunicipality'])->name('municipalities.create');
+    Route::post('/municipios', [PlatformController::class, 'storeMunicipality'])->name('municipalities.store');
+});
 
 $institutionalPages = [
     'about' => [
@@ -283,8 +278,7 @@ $institutionalPages = [
 ];
 
 foreach (
-    $institutionalPages
-    as $name => [$uri, $title, $description]
+    $institutionalPages as $name => [$uri, $title, $description]
 ) {
     Route::view(
         $uri,
@@ -295,7 +289,6 @@ foreach (
         )
     )->name($name);
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -334,7 +327,6 @@ Route::middleware([
             [DashboardController::class, 'index']
         )->name('dashboard');
 
-
         /*
         |--------------------------------------------------------------------------
         | Módulos administrativos
@@ -342,31 +334,23 @@ Route::middleware([
         */
 
         $modules = [
-            'tourist-spots' =>
-                'Pontos turísticos',
+            'tourist-spots' => 'Pontos turísticos',
 
-            'culture' =>
-                'História e cultura',
+            'culture' => 'História e cultura',
 
-            'establishments' =>
-                'Estabelecimentos',
+            'establishments' => 'Estabelecimentos',
 
-            'tours' =>
-                'Passeios',
+            'tours' => 'Passeios',
 
-            'guides' =>
-                'Guias turísticos',
+            'guides' => 'Guias turísticos',
 
-            'events' =>
-                'Eventos',
+            'events' => 'Eventos',
 
-            'official-itineraries' =>
-                'Roteiros oficiais',
+            'official-itineraries' => 'Roteiros oficiais',
         ];
 
         foreach (
-            $modules
-            as $name => $title
+            $modules as $name => $title
         ) {
             /*
             |--------------------------------------------------------------------------
@@ -389,7 +373,6 @@ Route::middleware([
                     $name.'.index'
                 );
 
-
             /*
             |--------------------------------------------------------------------------
             | Formulário de criação
@@ -411,7 +394,6 @@ Route::middleware([
                     $name.'.create'
                 );
 
-
             /*
             |--------------------------------------------------------------------------
             | Criação
@@ -432,7 +414,6 @@ Route::middleware([
                 ->name(
                     $name.'.store'
                 );
-
 
             /*
             |--------------------------------------------------------------------------
@@ -456,7 +437,6 @@ Route::middleware([
                     $name.'.edit'
                 );
 
-
             /*
             |--------------------------------------------------------------------------
             | Atualização
@@ -478,7 +458,6 @@ Route::middleware([
                 ->name(
                     $name.'.update'
                 );
-
 
             /*
             |--------------------------------------------------------------------------

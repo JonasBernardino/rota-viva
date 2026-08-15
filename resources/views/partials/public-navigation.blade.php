@@ -3,6 +3,12 @@
         <a class="route-cta" href="{{ route('routes.create') }}">Criar minha rota</a>
 
         @auth
+            @can('manage-platform')
+                <a class="manager-link" href="{{ route('platform.dashboard') }}">
+                    <span>Plataforma</span>
+                </a>
+            @endcan
+
             @can('access-admin-panel')
                 <a class="manager-link" href="{{ route('admin.dashboard') }}">
                     <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21v-2a7 7 0 0 1 14 0v2Z"></path></svg>

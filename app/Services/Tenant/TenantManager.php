@@ -4,11 +4,9 @@ namespace App\Services\Tenant;
 
 use App\Models\DominioMunicipio;
 use App\Models\Municipio;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 class TenantManager
 {
@@ -33,93 +31,42 @@ class TenantManager
         return $this->currentTenant !== null;
     }
 
-    /**
-     * Switch database search_path to the given municipality's schema.
-     */
     public function switchTo(Municipio $municipio): void
     {
-        $this->validateSchemaName($municipio->nome_schema);
-
-        $driver = DB::connection()->getDriverName();
-
-        if ($driver === 'pgsql') {
-            DB::statement("SET search_path TO \"{$municipio->nome_schema}\", public");
-        }
-
         $this->currentTenant = $municipio;
     }
 
-    /**
-     * Reset database search_path back to the public schema.
-     */
     public function reset(): void
     {
-        $driver = DB::connection()->getDriverName();
-
-        if ($driver === 'pgsql') {
-            DB::statement('SET search_path TO public');
-        }
-
         $this->currentTenant = null;
     }
 
     /**
-     * Create a new PostgreSQL schema for a tenant.
+     * Backward-compatible no-op. Column-based tenancy does not create schemas.
      */
     public function createSchema(string $schemaName): void
     {
-        $this->validateSchemaName($schemaName);
-
-        $driver = DB::connection()->getDriverName();
-
-        if ($driver === 'pgsql') {
-            DB::statement("CREATE SCHEMA IF NOT EXISTS \"{$schemaName}\"");
-        }
+        // Column-based tenancy does not create per-municipality schemas.
     }
 
     /**
-     * Drop a PostgreSQL schema.
+     * Backward-compatible no-op. Column-based tenancy does not drop schemas.
      */
     public function dropSchema(string $schemaName): void
     {
-        $this->validateSchemaName($schemaName);
-
-        $driver = DB::connection()->getDriverName();
-
-        if ($driver === 'pgsql') {
-            DB::statement("DROP SCHEMA IF EXISTS \"{$schemaName}\" CASCADE");
-        }
+        // Column-based tenancy does not drop per-municipality schemas.
     }
 
     /**
-     * Run tenant migrations on the municipality's schema.
+     * Backward-compatible no-op. Shared municipal tables are migrated once.
      */
     public function migrateTenant(Municipio $municipio): void
     {
-        $driver = DB::connection()->getDriverName();
-
-        if ($driver === 'pgsql') {
-            $this->createSchema($municipio->nome_schema);
-            DB::statement("SET search_path TO \"{$municipio->nome_schema}\", public");
-
-            try {
-                Artisan::call('migrate', [
-                    '--path' => 'database/migrations/tenant',
-                    '--force' => true,
-                ]);
-            } finally {
-                DB::statement('SET search_path TO public');
-            }
-        } else {
-            Artisan::call('migrate', [
-                '--path' => 'database/migrations/tenant',
-                '--force' => true,
-            ]);
-        }
+        // Shared municipal tables are migrated once by the normal migration pipeline.
     }
 
     /**
-     * Create a complete tenant: record in public, PostgreSQL schema, and runs tenant migrations.
+     * Create a municipality record and its known domains.
      *
      * @param  array<string, mixed>  $attributes
      * @param  array<int, string>  $domains
@@ -139,8 +86,6 @@ class TenantManager
             $attributes['nome_schema'] = 'tenant_'.$sanitizedSlug;
         }
 
-        $this->validateSchemaName($attributes['nome_schema']);
-
         return DB::transaction(function () use ($attributes, $domains): Municipio {
             /** @var Municipio $municipio */
             $municipio = Municipio::create($attributes);
@@ -157,9 +102,6 @@ class TenantManager
                     'verificado_em' => now(),
                 ]);
             }
-
-            $this->dropSchema($municipio->nome_schema);
-            $this->migrateTenant($municipio);
 
             return $municipio->load('dominios');
         });
@@ -213,15 +155,5 @@ class TenantManager
         }
 
         return null;
-    }
-
-    /**
-     * Validate schema name to ensure safe SQL identifiers.
-     */
-    protected function validateSchemaName(string $schemaName): void
-    {
-        if (! preg_match('/^[a-zA-Z0-9_]{1,63}$/', $schemaName)) {
-            throw new InvalidArgumentException("Invalid PostgreSQL schema name: [{$schemaName}]. Must be alphanumeric/underscores only and <= 63 chars.");
-        }
     }
 }

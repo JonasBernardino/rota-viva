@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Municipio;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class HomePageTest extends TestCase
@@ -45,10 +47,27 @@ class HomePageTest extends TestCase
 
     public function test_manager_sees_the_manager_area_link(): void
     {
-        $manager = User::factory()->manager()->create();
+        $municipality = Municipio::create([
+            'uuid' => (string) Str::uuid(),
+            'nome' => 'Lucena',
+            'slug' => 'lucena',
+            'codigo_ibge' => '2508606',
+            'uf' => 'PB',
+            'nome_schema' => 'tenant_lucena',
+            'status' => 'active',
+            'fuso_horario' => 'America/Fortaleza',
+        ]);
+
+        $municipality->dominios()->create([
+            'dominio' => 'lucena.rota-viva.test',
+            'is_principal' => true,
+            'verificado_em' => now(),
+        ]);
+
+        $manager = User::factory()->managerFor($municipality)->create();
 
         $this->actingAs($manager)
-            ->get(route('home'))
+            ->get('http://lucena.rota-viva.test')
             ->assertOk()
             ->assertSee('Área do gestor');
     }

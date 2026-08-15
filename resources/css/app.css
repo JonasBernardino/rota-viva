@@ -29,13 +29,15 @@ body {
 }
 
 button,
-input {
+input,
+select {
     font: inherit;
 }
 
 button:focus-visible,
 a:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
     outline: 3px solid var(--terracotta);
     outline-offset: 3px;
 }
@@ -105,6 +107,40 @@ input:focus-visible {
     fill: none;
     stroke: currentColor;
     stroke-width: 1.7;
+}
+
+.municipality-selector {
+    display: inline-flex;
+    gap: 0.55rem;
+    align-items: center;
+    margin: 0;
+    color: inherit;
+}
+
+.municipality-selector__icon {
+    display: inline-flex;
+    color: inherit;
+}
+
+.municipality-selector__icon svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+}
+
+.municipality-selector select {
+    max-width: 15rem;
+    padding: 0.25rem 1.65rem 0.25rem 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+
+.municipality-selector select:hover {
+    color: var(--forest);
 }
 
 .accessibility-symbol {
@@ -768,6 +804,10 @@ input:focus-visible {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
+}
+
+.admin-form__full {
+    grid-column: 1 / -1;
 }
 
 .admin-form label {

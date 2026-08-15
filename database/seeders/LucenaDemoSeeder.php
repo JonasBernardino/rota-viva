@@ -21,7 +21,7 @@ class LucenaDemoSeeder extends Seeder
 {
     public function run(TenantManager $tenantManager): void
     {
-        // 1. Garante que o Município existe no schema público
+        // 1. Garante que o Município existe no cadastro global
         $municipality = Municipio::where('slug', 'lucena')->first();
 
         if (! $municipality) {
@@ -45,12 +45,11 @@ class LucenaDemoSeeder extends Seeder
                 'localhost',
                 '127.0.0.1',
             ]);
-        } else {
-            $tenantManager->migrateTenant($municipality);
         }
 
-        // Troca para o schema do município para popular os dados
+        // Define o município atual para popular dados com municipio_id
         $tenantManager->switchTo($municipality);
+        app(TenantManager::class)->switchTo($municipality);
 
         try {
             // 2. Categorias
@@ -454,7 +453,9 @@ class LucenaDemoSeeder extends Seeder
                 [
                     'name' => 'Gestor do Turismo de Lucena',
                     'password' => Hash::make('12345678'),
+                    'municipio_id' => $municipality->id,
                     'can_access_admin_panel' => true,
+                    'can_manage_platform' => false,
                 ]
             );
 

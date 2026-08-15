@@ -18,7 +18,11 @@
                     <button class="utility-button" id="increase-font" type="button" aria-label="Aumentar tamanho do texto">A+</button>
                     <button class="utility-button" id="contrast-toggle" type="button" aria-pressed="false"><span class="contrast-symbol" aria-hidden="true"></span><span>Alto contraste</span></button>
                 </div>
-                <div class="locale-tools"><span>PT</span><span class="utility-divider" aria-hidden="true"></span><span>Município demonstrativo</span></div>
+                <div class="locale-tools">
+                    <span>PT</span>
+                    <span class="utility-divider" aria-hidden="true"></span>
+                    @include('partials.municipality-selector')
+                </div>
             </div>
         </div>
         <header class="site-header site-header--inner">

@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Municipio;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -79,6 +81,32 @@ class NavigationTest extends TestCase
         }
     }
 
+    public function test_home_has_functional_municipality_selector(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee(route('municipalities.select'), false)
+            ->assertSee('Selecione o município')
+            ->assertSee('Lucena');
+    }
+
+    public function test_municipality_selector_keeps_options_inside_tenant_domain(): void
+    {
+        $this->withHeader('Host', 'lucena.rota-viva.test')
+            ->get('/')
+            ->assertOk()
+            ->assertSee('Selecione o município')
+            ->assertSee('value="lucena"', false)
+            ->assertSee('Lucena');
+    }
+
+    public function test_selecting_municipality_redirects_to_configured_domain(): void
+    {
+        $this->withHeader('Host', 'rota-viva.test')
+            ->get('/municipios/selecionar?municipality=lucena')
+            ->assertRedirect('http://lucena.rota-viva.test');
+    }
+
     public function test_manager_login_page_is_available_at_specific_admin_route(): void
     {
         $this->get(route('login'))
@@ -113,15 +141,30 @@ class NavigationTest extends TestCase
 
     public function test_authenticated_manager_navigation_shows_manager_area_and_logout(): void
     {
-        $manager = User::factory()->manager()->create();
+        $lucena = Municipio::where('slug', 'lucena')->firstOrFail();
+        $manager = User::factory()->managerFor($lucena)->create();
 
-        $response = $this->actingAs($manager)->get(route('home'));
+        $response = $this->actingAs($manager)
+            ->get('http://lucena.rota-viva.test');
 
         $response->assertOk()
             ->assertSee(route('admin.dashboard'), false)
             ->assertSee(route('logout'), false)
             ->assertSee('Área do gestor')
             ->assertSee('Sair');
+    }
+
+    public function test_authenticated_superadmin_navigation_shows_platform_area_and_logout(): void
+    {
+        $superadmin = User::factory()->superadmin()->create();
+
+        $response = $this->actingAs($superadmin)->get(route('home'));
+
+        $response->assertOk()
+            ->assertSee(route('platform.dashboard'), false)
+            ->assertSee('Plataforma')
+            ->assertSee('Sair')
+            ->assertDontSee('Área do gestor');
     }
 
     public function test_guest_is_redirected_to_login_when_accessing_admin_panel(): void
@@ -141,28 +184,84 @@ class NavigationTest extends TestCase
 
     public function test_manager_can_access_admin_pages(): void
     {
-        $manager = User::factory()->manager()->create();
+        $lucena = Municipio::where('slug', 'lucena')->firstOrFail();
+        $manager = User::factory()->managerFor($lucena)->create();
 
         $this->actingAs($manager)
-            ->get(route('admin.dashboard'))
+            ->get('http://lucena.rota-viva.test/gestor')
             ->assertOk()
             ->assertSee('Painel Rota Viva');
 
         $this->actingAs($manager)
-            ->get(route('admin.tourist-spots.index'))
+            ->get('http://lucena.rota-viva.test/gestor/tourist-spots')
             ->assertOk()
             ->assertSee('Pontos Turísticos');
     }
 
+    public function test_manager_cannot_access_another_municipality_admin_panel(): void
+    {
+        $lucena = Municipio::where('slug', 'lucena')->firstOrFail();
+        $manager = User::factory()->managerFor($lucena)->create();
+
+        Municipio::create([
+            'uuid' => (string) Str::uuid(),
+            'nome' => 'Cabedelo',
+            'slug' => 'cabedelo',
+            'codigo_ibge' => '2503201',
+            'uf' => 'PB',
+            'nome_schema' => 'tenant_cabedelo',
+            'status' => 'active',
+            'fuso_horario' => 'America/Fortaleza',
+        ])->dominios()->create([
+            'dominio' => 'cabedelo.rota-viva.test',
+            'is_principal' => true,
+            'verificado_em' => now(),
+        ]);
+
+        $this->actingAs($manager)
+            ->get('http://cabedelo.rota-viva.test/gestor')
+            ->assertForbidden();
+    }
+
     public function test_manager_can_login_with_valid_credentials(): void
     {
-        $response = $this->post(route('login.post'), [
-            'email' => 'gestor@lucena.pb.gov.br',
-            'password' => '12345678',
-        ]);
+        $response = $this
+            ->post('http://lucena.rota-viva.test/gestor/entrar', [
+                'email' => 'gestor@lucena.pb.gov.br',
+                'password' => '12345678',
+            ]);
 
         $response->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticated();
+    }
+
+    public function test_manager_cannot_login_to_another_municipality(): void
+    {
+        Municipio::create([
+            'uuid' => (string) Str::uuid(),
+            'nome' => 'Cabedelo',
+            'slug' => 'cabedelo',
+            'codigo_ibge' => '2503201',
+            'uf' => 'PB',
+            'nome_schema' => 'tenant_cabedelo',
+            'status' => 'active',
+            'fuso_horario' => 'America/Fortaleza',
+        ])->dominios()->create([
+            'dominio' => 'cabedelo.rota-viva.test',
+            'is_principal' => true,
+            'verificado_em' => now(),
+        ]);
+
+        $response = $this
+            ->from('http://cabedelo.rota-viva.test/gestor/entrar')
+            ->post('http://cabedelo.rota-viva.test/gestor/entrar', [
+                'email' => 'gestor@lucena.pb.gov.br',
+                'password' => '12345678',
+            ]);
+
+        $response->assertRedirect('http://cabedelo.rota-viva.test/gestor/entrar');
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
     }
 
     public function test_authenticated_user_is_redirected_away_from_login_page(): void
@@ -176,11 +275,37 @@ class NavigationTest extends TestCase
 
     public function test_authenticated_manager_is_redirected_from_login_page_to_dashboard(): void
     {
-        $manager = User::factory()->manager()->create();
+        $lucena = Municipio::where('slug', 'lucena')->firstOrFail();
+        $manager = User::factory()->managerFor($lucena)->create();
 
         $this->actingAs($manager)
-            ->get(route('login'))
+            ->get('http://lucena.rota-viva.test/gestor/entrar')
             ->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_authenticated_superadmin_is_redirected_from_login_page_to_platform_dashboard(): void
+    {
+        $superadmin = User::factory()->superadmin()->create();
+
+        $this->actingAs($superadmin)
+            ->get(route('login'))
+            ->assertRedirect(route('platform.dashboard'));
+    }
+
+    public function test_superadmin_can_login_with_valid_credentials(): void
+    {
+        User::factory()->superadmin()->create([
+            'email' => 'superadmin@example.com',
+            'password' => bcrypt('12345678'),
+        ]);
+
+        $response = $this->post(route('login.post'), [
+            'email' => 'superadmin@example.com',
+            'password' => '12345678',
+        ]);
+
+        $response->assertRedirect(route('platform.dashboard'));
+        $this->assertAuthenticated();
     }
 
     public function test_regular_user_cannot_login_to_management_area(): void

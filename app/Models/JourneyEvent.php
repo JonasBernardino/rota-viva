@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMunicipality;
 use Illuminate\Database\Eloquent\Model;
 
 class JourneyEvent extends Model
 {
+    use BelongsToMunicipality;
+
     protected $fillable = [
         'session_uuid',
         'event_type',

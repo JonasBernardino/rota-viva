@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Tenant\TenantManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,7 +42,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            if (! (bool) ($request->user()->can_access_admin_panel ?? false)) {
+            if (! $this->canAccessManagementArea($request->user())) {
                 Auth::logout();
 
                 $request->session()->invalidate();
@@ -86,10 +87,32 @@ class AuthController extends Controller
 
     private function authenticatedHome(mixed $user): string
     {
-        if ((bool) ($user->can_access_admin_panel ?? false)) {
+        if ((bool) ($user->can_manage_platform ?? false)) {
+            return route('platform.dashboard');
+        }
+
+        if ($this->canAccessCurrentMunicipality($user)) {
             return route('admin.dashboard');
         }
 
         return route('home');
+    }
+
+    private function canAccessManagementArea(mixed $user): bool
+    {
+        return (bool) ($user->can_manage_platform ?? false)
+            || $this->canAccessCurrentMunicipality($user);
+    }
+
+    private function canAccessCurrentMunicipality(mixed $user): bool
+    {
+        if (! (bool) ($user->can_access_admin_panel ?? false)) {
+            return false;
+        }
+
+        $municipality = app(TenantManager::class)->current();
+
+        return $municipality !== null
+            && (int) $user->municipio_id === (int) $municipality->id;
     }
 }
