@@ -72,6 +72,52 @@ class NavigationTest extends TestCase
         }
     }
 
+    public function test_tourist_spot_detail_shows_registered_media(): void
+    {
+        $this->get('http://lucena.rota-viva.test/pontos-turisticos/centro-cultural-e-memoria-de-lucena')
+            ->assertOk()
+            ->assertSee('/images/cultural-center.webp', false)
+            ->assertSee('Centro Cultural e Memória de Lucena')
+            ->assertSee('Fotos de Centro Cultural e Memória de Lucena');
+    }
+
+    public function test_tourist_spot_catalog_cards_show_registered_media(): void
+    {
+        $this->get('http://lucena.rota-viva.test/pontos-turisticos')
+            ->assertOk()
+            ->assertSee('/images/cultural-center.webp', false)
+            ->assertSee('Centro Cultural e Memória de Lucena')
+            ->assertSee('catalog-card__media', false);
+    }
+
+    public function test_city_map_cards_show_registered_media(): void
+    {
+        $this->get('http://lucena.rota-viva.test/mapa-da-cidade')
+            ->assertOk()
+            ->assertSee('/images/cultural-center.webp', false)
+            ->assertSee('catalog-card__media', false)
+            ->assertDontSee('catalog-card__placeholder', false);
+    }
+
+    public function test_landing_pages_do_not_show_numbered_link_cards(): void
+    {
+        $this->get(route('discover'))
+            ->assertOk()
+            ->assertDontSee('link-card__number', false);
+
+        $this->get(route('experiences'))
+            ->assertOk()
+            ->assertDontSee('link-card__number', false);
+    }
+
+    public function test_official_itinerary_catalog_uses_route_place_media(): void
+    {
+        $this->get('http://lucena.rota-viva.test/roteiros-oficiais')
+            ->assertOk()
+            ->assertSee('/images/cultural-center.webp', false)
+            ->assertSee('catalog-card__media', false);
+    }
+
     public function test_home_navigation_points_to_public_pages(): void
     {
         $response = $this->get(route('home'));

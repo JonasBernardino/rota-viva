@@ -6,10 +6,13 @@ use App\Models\Atrativo;
 use App\Models\Categoria;
 use App\Models\Estabelecimento;
 use App\Models\Evento;
+use App\Models\MidiaAtrativo;
 use App\Models\Municipio;
 use App\Models\Roteiro;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminCrudTest extends TestCase
@@ -56,6 +59,8 @@ class AdminCrudTest extends TestCase
 
     public function test_manager_can_create_update_and_delete_tourist_spot(): void
     {
+        Storage::fake('public');
+
         $category = Categoria::firstOrFail();
 
         $this->actingAs($this->manager)
@@ -72,12 +77,17 @@ class AdminCrudTest extends TestCase
                 'tags' => 'cultura, memoria',
                 'adequado_criancas' => 1,
                 'is_disponivel' => 1,
+                'imagem' => UploadedFile::fake()->image('museu.jpg', 1200, 800),
+                'imagem_alt' => 'Fachada do Museu da Maré',
             ])
             ->assertRedirect(route('admin.tourist-spots.index'));
 
         $place = Atrativo::where('slug', 'museu-da-mare')->firstOrFail();
+        $media = MidiaAtrativo::where('atrativo_id', $place->id)->firstOrFail();
 
         $this->assertSame(['cultura', 'memoria'], $place->tags);
+        $this->assertSame('Fachada do Museu da Maré', $media->descricao_acessibilidade);
+        Storage::disk('public')->assertExists($media->url);
 
         $this->actingAs($this->manager)
             ->put(route('admin.tourist-spots.update', $place->id), [
@@ -111,6 +121,8 @@ class AdminCrudTest extends TestCase
 
     public function test_manager_can_create_update_and_delete_establishment(): void
     {
+        Storage::fake('public');
+
         $this->actingAs($this->manager)
             ->post(route('admin.establishments.store'), [
                 'nome' => 'Café da Praia',
@@ -126,12 +138,15 @@ class AdminCrudTest extends TestCase
                 'faixa_preco' => '$$',
                 'tem_selo_qualidade' => 1,
                 'status_validacao' => 'approved',
+                'imagem' => UploadedFile::fake()->image('cafe.jpg', 1200, 800),
             ])
             ->assertRedirect(route('admin.establishments.index'));
 
         $business = Estabelecimento::where('slug', 'cafe-da-praia')->firstOrFail();
 
         $this->assertTrue($business->tem_selo_qualidade);
+        $this->assertNotNull($business->imagem_capa);
+        Storage::disk('public')->assertExists($business->imagem_capa);
 
         $this->actingAs($this->manager)
             ->put(route('admin.establishments.update', $business->id), [
@@ -160,6 +175,8 @@ class AdminCrudTest extends TestCase
 
     public function test_manager_can_create_update_and_delete_event(): void
     {
+        Storage::fake('public');
+
         $this->actingAs($this->manager)
             ->post(route('admin.events.store'), [
                 'nome' => 'Festival da Cultura Viva',
@@ -173,10 +190,14 @@ class AdminCrudTest extends TestCase
                 'is_acessivel' => 1,
                 'categoria' => 'cultural',
                 'status' => 'scheduled',
+                'imagem' => UploadedFile::fake()->image('festival.jpg', 1200, 800),
             ])
             ->assertRedirect(route('admin.events.index'));
 
         $event = Evento::where('slug', 'festival-da-cultura-viva')->firstOrFail();
+
+        $this->assertNotNull($event->imagem_url);
+        Storage::disk('public')->assertExists($event->imagem_url);
 
         $this->actingAs($this->manager)
             ->put(route('admin.events.update', $event->id), [

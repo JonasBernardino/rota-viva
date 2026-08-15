@@ -1,13 +1,13 @@
 @extends('layouts.public')
 @section('title', 'Mapa da Cidade — Rota Viva')
-@section('description', 'Visualize atrativos, patrimônios históricos e experiências no território de Lucena.')
+@section('description', 'Visualize atrativos, patrimônios históricos e experiências no território.')
 
 @section('content')
     <section class="page-hero page-hero--compact">
         <div class="page-container page-hero__content">
             <p class="eyebrow">Cartografia e Território</p>
             <h1>Mapa da Cidade</h1>
-            <p>Explore a distribuição geográfica dos {{ count($places) }} atrativos oficiais validados de {{ $currentTenant->name ?? 'Lucena' }}.</p>
+            <p>Explore a distribuição geográfica dos {{ count($places) }} atrativos oficiais validados de {{ $currentTenant->nome ?? 'Município' }}.</p>
         </div>
     </section>
 
@@ -20,7 +20,7 @@
                     data-route-map
                     data-map-type="route"
                     data-stops='@json($mapStops)'
-                    aria-label="Mapa interativo dos pontos turísticos oficiais de Lucena"
+                    aria-label="Mapa interativo dos pontos turísticos oficiais de {{ $currentTenant->nome ?? 'Município' }}"
                     style="min-height: 480px; width: 100%; border-radius: 12px; border: 1px solid #cbd5e1;"
                 ></div>
 
@@ -40,9 +40,21 @@
 
             <div class="catalog-grid">
                 @foreach ($places as $place)
+                    @php
+                        $media = $place->midias->firstWhere('is_destaque', true) ?? $place->midias->first();
+                        $imagePath = $media?->url;
+                        $imageUrl = $imagePath
+                            ? (\Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://', '/']) ? $imagePath : asset('storage/'.$imagePath))
+                            : null;
+                    @endphp
+
                     <article class="catalog-card">
-                        <div class="catalog-card__placeholder" aria-hidden="true">
-                            <span>{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                        <div class="catalog-card__media {{ $imageUrl ? '' : 'catalog-card__media--placeholder' }}">
+                            @if ($imageUrl)
+                                <img src="{{ $imageUrl }}" alt="{{ $media?->descricao_acessibilidade ?: $place->nome }}">
+                            @else
+                                <span aria-hidden="true">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                            @endif
                         </div>
                         <div class="catalog-card__content">
                             <p class="eyebrow">{{ $place->category->name ?? 'Atrativo' }}</p>

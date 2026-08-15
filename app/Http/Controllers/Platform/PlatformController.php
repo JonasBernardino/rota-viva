@@ -63,6 +63,23 @@ class PlatformController extends Controller
             'configuracoes' => [
                 'created_from_platform_panel' => true,
             ],
+            'brand_name' => 'ROTA VIVA',
+            'hero_eyebrow' => 'Turismo inteligente',
+            'hero_title' => 'Como você quer viver '.$data['nome'].' hoje?',
+            'hero_description' => 'Conte o que você procura e receba uma experiência que se adapta ao seu tempo, orçamento e interesses.',
+            'hero_image_path' => '/images/rota-viva-hero.webp',
+            'hero_image_alt' => 'Imagem de destaque do município de '.$data['nome'],
+            'hero_search_placeholder' => 'Ex.: Quero cultura e tranquilidade, tenho 4 horas...',
+            'hero_card_title' => 'Sua experiência, em movimento',
+            'hero_card_tags' => ['4 horas', 'Família', 'Cultura'],
+            'local_economy_eyebrow' => 'Economia local',
+            'local_economy_title' => 'Cada rota também movimenta o território',
+            'local_economy_description' => 'Pequenos negócios, experiências culturais e lugares menos conhecidos passam a fazer parte do percurso de forma relevante — nunca como publicidade invasiva.',
+            'local_economy_stat' => '+ oportunidades locais no caminho',
+            'local_economy_link_label' => 'Conheça quem faz a cidade',
+            'local_economy_link_url' => null,
+            'local_economy_image_path' => '/images/local-artisan.webp',
+            'local_economy_image_alt' => 'Artesã local sorrindo enquanto modela uma peça de cerâmica',
         ], [$domain]);
 
         User::create([

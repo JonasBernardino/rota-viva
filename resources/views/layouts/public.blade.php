@@ -17,6 +17,7 @@
                     <button class="utility-button" id="decrease-font" type="button" aria-label="Diminuir tamanho do texto">A−</button>
                     <button class="utility-button" id="increase-font" type="button" aria-label="Aumentar tamanho do texto">A+</button>
                     <button class="utility-button" id="contrast-toggle" type="button" aria-pressed="false"><span class="contrast-symbol" aria-hidden="true"></span><span>Alto contraste</span></button>
+                    <button class="utility-button" id="theme-toggle" type="button" aria-pressed="false"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Tema escuro</span></button>
                 </div>
                 <div class="locale-tools">
                     <span>PT</span>
@@ -27,7 +28,7 @@
         </div>
         <header class="site-header site-header--inner">
             <nav class="navbar navbar-expand-lg page-container" aria-label="Navegação principal">
-                <a class="brand" href="{{ route('home') }}" aria-label="Rota Viva — página inicial">ROTA VIVA</a>
+                @include('partials.brand')
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navigation" aria-controls="main-navigation" aria-expanded="false" aria-label="Abrir navegação"><span class="navbar-toggler-icon"></span></button>
                 @include('partials.public-navigation')
             </nav>
@@ -35,7 +36,7 @@
         <main id="conteudo" class="inner-page">@yield('content')</main>
         <footer class="inner-footer">
             <div class="page-container inner-footer__content">
-                <div><a class="brand brand--light" href="{{ route('home') }}">ROTA VIVA</a><p>Turismo inteligente para territórios vivos.</p></div>
+                <div>@include('partials.brand', ['light' => true])<p>Turismo inteligente para territórios vivos.</p></div>
                 <nav aria-label="Navegação do rodapé">
                     <a href="{{ route('tourist-spots.index') }}">Pontos turísticos</a><a href="{{ route('tours.index') }}">Passeios</a><a href="{{ route('agenda.index') }}">Agenda</a><a href="{{ route('about') }}">Sobre o projeto</a><a href="{{ route('help') }}">Ajuda</a>
                 </nav>

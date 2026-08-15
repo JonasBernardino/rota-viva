@@ -64,17 +64,17 @@ class CatalogController extends Controller
             'tourist-spots' => [
                 'title' => 'Pontos turísticos',
                 'eyebrow' => 'Atrativos oficiais',
-                'description' => 'Lugares que revelam a natureza, a história e a identidade do município de Lucena com informações validadas.',
+                'description' => 'Lugares que revelam a natureza, a história e a identidade do município com informações validadas.',
             ],
             'culture' => [
                 'title' => 'História e cultura',
                 'eyebrow' => 'Identidade territorial',
-                'description' => 'Histórias, tradições, patrimônios barrocos e vozes que mantêm viva a memória secular de Lucena.',
+                'description' => 'Histórias, tradições, patrimônios e vozes que mantêm viva a memória do território.',
             ],
             'tours' => [
                 'title' => 'Passeios e experiências',
                 'eyebrow' => 'Atividades locais',
-                'description' => 'Passeios ecológicos de barco pelo Rio Miriri, oficinas de renda com mestras artesãs e circuitos guiados.',
+                'description' => 'Passeios, oficinas, vivências e circuitos guiados cadastrados pela gestão municipal.',
             ],
             'guides' => [
                 'title' => 'Guias turísticos',
@@ -94,19 +94,19 @@ class CatalogController extends Controller
             'dining' => [
                 'title' => 'Onde comer',
                 'eyebrow' => 'Gastronomia local',
-                'description' => 'Restaurantes de peixada paraibana, quiosques com peixe na telha e cafés com tapiocas artesanais.',
+                'description' => 'Restaurantes, quiosques, cafés e sabores locais cadastrados e verificados.',
             ],
             'agenda' => [
                 'title' => 'Agenda',
                 'eyebrow' => 'Acontece na cidade',
-                'description' => 'Festas tradicionais, festivais gastronômicos, rodas de coco de roda e eventos culturais com data marcada.',
+                'description' => 'Eventos culturais, festivais, celebrações e atividades oficiais com data marcada.',
             ],
         ];
 
         return $configs[$section] ?? [
             'title' => 'Catálogo',
             'eyebrow' => 'Exploração',
-            'description' => 'Conheça tudo o que Lucena tem a oferecer.',
+            'description' => 'Conheça tudo o que o município tem a oferecer.',
         ];
     }
 
@@ -116,14 +116,14 @@ class CatalogController extends Controller
     private function fetchItemsForSection(string $section)
     {
         return match ($section) {
-            'tourist-spots' => Atrativo::with(['categoria', 'recursosAcessibilidade', 'horarios'])
+            'tourist-spots' => Atrativo::with(['categoria', 'recursosAcessibilidade', 'horarios', 'midias'])
                 ->where('is_disponivel', true)
                 ->get(),
 
             'culture' => Atrativo::whereHas('categoria', function ($query): void {
                 $query->whereIn('slug', ['patrimonio-historico', 'cultura-e-tradicao']);
             })
-                ->with(['categoria', 'recursosAcessibilidade'])
+                ->with(['categoria', 'recursosAcessibilidade', 'midias'])
                 ->get(),
 
             'tours' => Estabelecimento::whereIn('tipo_estabelecimento', ['atividade', 'guia_turistico', 'activity', 'tour_guide'])
@@ -136,7 +136,7 @@ class CatalogController extends Controller
 
             'official-itineraries' => Roteiro::where('status', 'official')
                 ->orWhere('titulo', 'like', 'Roteiro%')
-                ->with(['itens.atrativo.categoria'])
+                ->with(['itens.atrativo.categoria', 'itens.atrativo.midias'])
                 ->get(),
 
             'stays' => Estabelecimento::whereIn('tipo_estabelecimento', ['hospedagem', 'lodging'])
@@ -162,7 +162,7 @@ class CatalogController extends Controller
     {
         return match ($section) {
             'tourist-spots', 'culture' => Atrativo::where('slug', $slug)
-                ->with(['categoria', 'recursosAcessibilidade', 'horarios'])
+                ->with(['categoria', 'recursosAcessibilidade', 'horarios', 'midias'])
                 ->first(),
 
             'stays', 'dining', 'guides', 'tours' => Estabelecimento::where('slug', $slug)
@@ -173,8 +173,8 @@ class CatalogController extends Controller
 
             'official-itineraries' => Roteiro::where('titulo', 'like', '%'.str_replace('-', ' ', $slug).'%')
                 ->orWhere('id', is_numeric($slug) ? (int) $slug : 0)
-                ->with(['itens.atrativo.categoria'])
-                ->first() ?? Roteiro::with(['itens.atrativo.categoria'])->first(),
+                ->with(['itens.atrativo.categoria', 'itens.atrativo.midias'])
+                ->first() ?? Roteiro::with(['itens.atrativo.categoria', 'itens.atrativo.midias'])->first(),
 
             default => Atrativo::where('slug', $slug)->first(),
         };

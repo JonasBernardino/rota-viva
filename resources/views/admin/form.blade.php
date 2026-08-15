@@ -5,6 +5,19 @@
     $action = $isEditing
         ? route('admin.'.$module.'.update', $item->id)
         : route('admin.'.$module.'.store');
+    $placeMedia = $type === 'place' && $isEditing
+        ? (($item->midias ?? collect())->firstWhere('is_destaque', true) ?? ($item->midias ?? collect())->first())
+        : null;
+    $placeMediaUrl = $placeMedia?->url;
+    $currentImage = match ($type) {
+        'place' => $placeMediaUrl,
+        'business' => $item->imagem_capa ?? null,
+        'event' => $item->imagem_url ?? null,
+        default => null,
+    };
+    $currentImageUrl = $currentImage
+        ? (\Illuminate\Support\Str::startsWith($currentImage, ['http://', 'https://', '/']) ? $currentImage : asset('storage/'.$currentImage))
+        : null;
 @endphp
 
 @section('title', ($isEditing ? 'Editar ' : 'Novo cadastro — ') . $title)
@@ -32,7 +45,7 @@
                 </div>
             @endif
 
-            <form class="admin-form" action="{{ $action }}" method="post">
+            <form class="admin-form" action="{{ $action }}" method="post" enctype="multipart/form-data">
                 @csrf
 
                 @if ($isEditing)
@@ -101,6 +114,25 @@
                         Tags separadas por vírgula
                         <input name="tags" value="{{ old('tags', isset($item) ? implode(', ', $item->tags ?? []) : '') }}">
                     </label>
+
+                    <div class="admin-form__grid">
+                        <label>
+                            Imagem de destaque
+                            <input name="imagem" type="file" accept="image/*">
+                        </label>
+
+                        <label>
+                            Texto alternativo da imagem
+                            <input name="imagem_alt" value="{{ old('imagem_alt', $placeMedia->descricao_acessibilidade ?? '') }}" maxlength="180" placeholder="Descreva a imagem para acessibilidade">
+                        </label>
+                    </div>
+
+                    @if ($currentImageUrl)
+                        <div class="appearance-preview appearance-preview--wide">
+                            <span>Imagem atual</span>
+                            <img src="{{ $currentImageUrl }}" alt="">
+                        </div>
+                    @endif
 
                     <div class="admin-form__checks">
                         <label><input type="checkbox" name="is_ar_livre" value="1" @checked(old('is_ar_livre', $item->is_ar_livre ?? false))> Ao ar livre</label>
@@ -192,6 +224,18 @@
                         <textarea name="descricao" rows="5" required>{{ old('descricao', $item->descricao ?? '') }}</textarea>
                     </label>
 
+                    <label>
+                        Imagem de destaque
+                        <input name="imagem" type="file" accept="image/*">
+                    </label>
+
+                    @if ($currentImageUrl)
+                        <div class="appearance-preview appearance-preview--wide">
+                            <span>Imagem atual</span>
+                            <img src="{{ $currentImageUrl }}" alt="">
+                        </div>
+                    @endif
+
                     <div class="admin-form__checks">
                         <label><input type="checkbox" name="tem_selo_qualidade" value="1" @checked(old('tem_selo_qualidade', $item->tem_selo_qualidade ?? true))> Possui Selo de Qualidade</label>
                     </div>
@@ -271,6 +315,18 @@
                         Descrição
                         <textarea name="descricao" rows="5" required>{{ old('descricao', $item->descricao ?? '') }}</textarea>
                     </label>
+
+                    <label>
+                        Imagem de destaque
+                        <input name="imagem" type="file" accept="image/*">
+                    </label>
+
+                    @if ($currentImageUrl)
+                        <div class="appearance-preview appearance-preview--wide">
+                            <span>Imagem atual</span>
+                            <img src="{{ $currentImageUrl }}" alt="">
+                        </div>
+                    @endif
 
                     <div class="admin-form__checks">
                         <label><input type="checkbox" name="is_gratuito" value="1" @checked(old('is_gratuito', $item->is_gratuito ?? true))> Gratuito</label>

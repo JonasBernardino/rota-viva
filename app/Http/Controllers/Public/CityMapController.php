@@ -13,7 +13,7 @@ class CityMapController extends Controller
      */
     public function __invoke(): View
     {
-        $places = Atrativo::with(['categoria', 'recursosAcessibilidade'])
+        $places = Atrativo::with(['categoria', 'recursosAcessibilidade', 'midias'])
             ->where('is_disponivel', true)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')

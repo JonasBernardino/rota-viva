@@ -13,6 +13,13 @@
 
     <section class="page-section">
         <div class="page-container" style="max-width: 840px; margin: 0 auto; line-height: 1.8; color: #334155;">
+            @php
+                $municipalityName = $currentTenant->nome ?? 'município';
+                $municipalityState = $currentTenant->uf ?? null;
+                $municipalityLabel = $municipalityState ? $municipalityName.' - '.$municipalityState : $municipalityName;
+                $contactEmail = 'turismo@'.str($municipalityName)->slug().'.gov.br';
+            @endphp
+
             @if (Route::currentRouteName() === 'about')
                 <article class="editorial-content">
                     <h2>O que é o Rota Viva?</h2>
@@ -30,12 +37,12 @@
             @elseif (Route::currentRouteName() === 'contact')
                 <article class="editorial-content">
                     <h2>Canais Oficiais de Atendimento</h2>
-                    <p>Entre em contato direto com a equipe técnica da Secretaria Municipal de Turismo e Desenvolvimento Econômico de Lucena.</p>
+                    <p>Entre em contato direto com a equipe técnica da Secretaria Municipal de Turismo de {{ $municipalityName }}.</p>
 
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin: 24px 0;">
-                        <h3 style="margin-top: 0; color: #0f172a;">Secretaria Municipal de Turismo de Lucena</h3>
-                        <p style="margin-bottom: 8px;">📍 <strong>Endereço:</strong> Praça Central, s/n — Centro, Lucena - PB</p>
-                        <p style="margin-bottom: 8px;">✉ <strong>E-mail:</strong> <a href="mailto:turismo@lucena.pb.gov.br" style="color: #0284c7;">turismo@lucena.pb.gov.br</a></p>
+                        <h3 style="margin-top: 0; color: #0f172a;">Secretaria Municipal de Turismo de {{ $municipalityName }}</h3>
+                        <p style="margin-bottom: 8px;">📍 <strong>Endereço:</strong> Praça Central, s/n — Centro, {{ $municipalityLabel }}</p>
+                        <p style="margin-bottom: 8px;">✉ <strong>E-mail:</strong> <a href="mailto:{{ $contactEmail }}" style="color: #0284c7;">{{ $contactEmail }}</a></p>
                         <p style="margin-bottom: 8px;">📞 <strong>Telefone Geral:</strong> (83) 3293-1000</p>
                         <p style="margin-bottom: 0;">⏱ <strong>Horário de Atendimento:</strong> Segunda a Sexta, das 08h às 14h</p>
                     </div>
@@ -65,7 +72,7 @@
             @elseif (Route::currentRouteName() === 'accessibility.statement')
                 <article class="editorial-content">
                     <h2>Declaração de Compromisso com a Acessibilidade</h2>
-                    <p>O município de Lucena e a plataforma Rota Viva têm o compromisso de assegurar a acessibilidade digital e territorial para todas as pessoas, incluindo idosos e pessoas com deficiência (PcD).</p>
+                    <p>O município de {{ $municipalityName }} e a plataforma Rota Viva têm o compromisso de assegurar a acessibilidade digital e territorial para todas as pessoas, incluindo idosos e pessoas com deficiência (PcD).</p>
                     
                     <h3>Conformidade Digital</h3>
                     <p>Este portal segue as diretrizes do Modelo de Acessibilidade em Governo Eletrônico (eMAG) e WCAG 2.1 nível AA, incluindo:</p>

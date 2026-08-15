@@ -4,7 +4,21 @@
     $name = $item->name ?? $item->title ?? str($slug)->replace('-', ' ')->title();
     $desc = $item->description ?? $item->summary ?? 'Informações oficiais validadas pelo município.';
     $categoryName = $item->category->name ?? (is_string($item->category ?? null) ? ucfirst($item->category) : null);
-    $location = $item->address ? $item->address . ($item->neighborhood ? ' — ' . $item->neighborhood : '') : ($item->location_name ?? $item->neighborhood ?? 'Lucena — PB');
+    $municipalityName = $currentTenant->nome ?? 'Município';
+    $municipalityState = $currentTenant->uf ?? null;
+    $locationFallback = $municipalityState ? $municipalityName.' — '.$municipalityState : $municipalityName;
+    $location = $item->address ? $item->address . ($item->neighborhood ? ' — ' . $item->neighborhood : '') : ($item->location_name ?? $item->neighborhood ?? $locationFallback);
+    $mediaItems = collect($item->midias ?? []);
+    if ($mediaItems->isEmpty() && isset($item->itens)) {
+        $mediaItems = collect($item->itens)
+            ->flatMap(fn ($routeItem) => $routeItem->atrativo?->midias ?? collect())
+            ->values();
+    }
+    $singleImage = $item->imagem_capa ?? $item->imagem_url ?? null;
+    $singleImageUrl = $singleImage
+        ? (\Illuminate\Support\Str::startsWith($singleImage, ['http://', 'https://', '/']) ? $singleImage : asset('storage/'.$singleImage))
+        : null;
+    $fallbackImage = asset('images/rota-viva-hero.webp');
 @endphp
 
 @section('title', $name . ' — ' . $catalogTitle)
@@ -35,11 +49,57 @@
 
     <section class="page-section">
         <div class="page-container detail-layout">
-            <div class="detail-placeholder" aria-label="Espaço reservado para visualização do local" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 40px 20px; border-radius: 12px; text-align: center;">
-                <span style="font-size: 3rem; margin-bottom: 12px;" aria-hidden="true">🏛️</span>
-                <strong style="font-size: 1.25rem;">{{ $name }}</strong>
-                <span style="opacity: 0.85; font-size: 0.9rem; margin-top: 4px;">Informação oficial validada por Lucena</span>
-            </div>
+            @if ($mediaItems->isNotEmpty())
+                <div class="detail-gallery" aria-label="Fotos de {{ $name }}">
+                    @foreach ($mediaItems as $media)
+                        @php
+                            $mediaUrl = $media->url;
+                            $imageUrl = \Illuminate\Support\Str::startsWith($mediaUrl, ['http://', 'https://', '/'])
+                                ? $mediaUrl
+                                : asset('storage/'.$mediaUrl);
+                        @endphp
+
+                        <figure class="detail-gallery__item {{ $loop->first ? 'detail-gallery__item--featured' : '' }}">
+                            <img
+                                src="{{ $imageUrl }}"
+                                alt="{{ $media->descricao_acessibilidade ?: $media->titulo ?: $name }}"
+                            >
+
+                            @if ($media->titulo || $media->autor)
+                                <figcaption>
+                                    @if ($media->titulo)
+                                        <strong>{{ $media->titulo }}</strong>
+                                    @endif
+
+                                    @if ($media->autor)
+                                        <span>Foto: {{ $media->autor }}</span>
+                                    @endif
+                                </figcaption>
+                            @endif
+                        </figure>
+                    @endforeach
+                </div>
+            @elseif ($singleImageUrl)
+                <figure class="detail-gallery detail-gallery--fallback" aria-label="Foto de {{ $name }}">
+                    <div class="detail-gallery__item detail-gallery__item--featured">
+                        <img src="{{ $singleImageUrl }}" alt="{{ $name }}">
+                        <figcaption>
+                            <strong>{{ $name }}</strong>
+                            <span>Informação oficial validada pelo município</span>
+                        </figcaption>
+                    </div>
+                </figure>
+            @else
+                <figure class="detail-gallery detail-gallery--fallback" aria-label="Imagem ilustrativa de {{ $name }}">
+                    <div class="detail-gallery__item detail-gallery__item--featured">
+                        <img src="{{ $fallbackImage }}" alt="{{ $name }}">
+                        <figcaption>
+                            <strong>{{ $name }}</strong>
+                            <span>Informação oficial validada pelo município</span>
+                        </figcaption>
+                    </div>
+                </figure>
+            @endif
 
             <article class="detail-copy">
                 <p class="eyebrow">Sobre este atrativo</p>

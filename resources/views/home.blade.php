@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Descubra experiências e crie rotas personalizadas para viver a cidade no seu ritmo.">
 
-        <title>Rota Viva — Turismo inteligente</title>
+        <title>{{ $homeContent['brand_name'] ?? 'Rota Viva' }} — Turismo inteligente</title>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -26,6 +26,10 @@
                         <span class="contrast-symbol" aria-hidden="true"></span>
                         <span>Alto contraste</span>
                     </button>
+                    <button class="utility-button" id="theme-toggle" type="button" aria-pressed="false">
+                        <span class="theme-symbol" aria-hidden="true">☾</span>
+                        <span class="theme-label">Tema escuro</span>
+                    </button>
                 </div>
 
                 <div class="locale-tools">
@@ -42,7 +46,7 @@
 
         <header class="site-header">
             <nav class="navbar navbar-expand-lg page-container" aria-label="Navegação principal">
-                <a class="brand" href="{{ route('home') }}" aria-label="Rota Viva — página inicial">ROTA VIVA</a>
+                @include('partials.brand')
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navigation" aria-controls="main-navigation" aria-expanded="false" aria-label="Abrir navegação">
                     <span class="navbar-toggler-icon"></span>
@@ -56,15 +60,15 @@
             <section class="hero" aria-labelledby="hero-title">
                 <div class="hero__copy">
                     <div class="hero__copy-inner">
-                        <p class="eyebrow">Turismo inteligente</p>
-                        <h1 id="hero-title">Como você quer<br>viver a cidade hoje?</h1>
-                        <p class="hero__description">Conte o que você procura e receba uma experiência que se adapta ao seu tempo, orçamento e interesses.</p>
+                        <p class="eyebrow">{{ $homeContent['hero_eyebrow'] }}</p>
+                        <h1 id="hero-title">{!! nl2br(e($homeContent['hero_title'])) !!}</h1>
+                        <p class="hero__description">{{ $homeContent['hero_description'] }}</p>
 
                         <form class="route-search" action="{{ route('routes.create') }}" method="get">
                             <label class="visually-hidden" for="route-query">Descreva a experiência que deseja</label>
                             <div class="route-search__field">
                                 <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.7 9.7 0 0 1-4-.8L3 21l1.5-4.2A8.5 8.5 0 1 1 21 11.5Z"></path></svg>
-                                <input id="route-query" name="q" type="text" placeholder="Ex.: Quero cultura e tranquilidade, tenho 4 horas...">
+                                <input id="route-query" name="q" type="text" placeholder="{{ $homeContent['hero_search_placeholder'] }}">
                             </div>
                             <button class="route-search__button" type="submit">
                                 <span>Criar minha rota</span>
@@ -75,17 +79,17 @@
                 </div>
 
                 <div class="hero__visual">
-                    <img src="{{ asset('images/rota-viva-hero.webp') }}" alt="Cidade histórica à beira-mar, cercada por montanhas e natureza">
+                    <img src="{{ $homeContent['hero_image_url'] }}" alt="{{ $homeContent['hero_image_alt'] }}">
                     <div class="experience-card">
                         <div class="experience-card__icon" aria-hidden="true">
                             <svg viewBox="0 0 48 48"><path d="M30 10c0 7-8 13-8 13s-8-6-8-13a8 8 0 1 1 16 0Z"></path><circle cx="22" cy="10" r="2.5"></circle><path class="dashed" d="M11 34c3-6 8-2 11-6s10-3 14 2-2 9-8 7-7 3-10 5"></path></svg>
                         </div>
                         <div>
-                            <strong>Sua experiência, em movimento</strong>
+                            <strong>{{ $homeContent['hero_card_title'] }}</strong>
                             <div class="experience-card__tags">
-                                <span>◷&nbsp; 4 horas</span>
-                                <span>♧&nbsp; Família</span>
-                                <span>▥&nbsp; Cultura</span>
+                                @foreach ($homeContent['hero_card_tags'] as $tag)
+                                    <span>{{ $loop->first ? '◷' : ($loop->iteration === 2 ? '♧' : '▥') }}&nbsp; {{ $tag }}</span>
+                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -153,38 +157,43 @@
                 </div>
 
                 <div class="places-grid">
-                    <article class="place-card place-card--culture" id="cultura">
-                        <img src="{{ asset('images/cultural-center.webp') }}" alt="Centro cultural instalado em construção histórica com portas verdes">
-                        <a class="place-card__content" href="{{ route('tourist-spots.show', 'centro-cultural-e-memoria-de-lucena') }}">
-                            <span>
-                                <strong>Centro Cultural e Memória de Lucena</strong>
-                                <small>Cultura e história&nbsp;&nbsp;·&nbsp;&nbsp;75 min</small>
-                            </span>
-                            <span class="place-card__arrow" aria-hidden="true">→</span>
-                        </a>
-                    </article>
+                    @forelse ($featuredPlaces as $place)
+                        @php
+                            $fallbackImages = [
+                                asset('images/cultural-center.webp'),
+                                asset('images/local-market.webp'),
+                                asset('images/rota-viva-hero.webp'),
+                            ];
+                            $media = $place->midias->firstWhere('is_destaque', true) ?? $place->midias->first();
+                            $mediaUrl = $media?->url;
+                            $imageUrl = $mediaUrl
+                                ? (\Illuminate\Support\Str::startsWith($mediaUrl, ['http://', 'https://', '/']) ? $mediaUrl : asset('storage/'.$mediaUrl))
+                                : $fallbackImages[$loop->index] ?? asset('images/rota-viva-hero.webp');
+                            $categoryName = $place->categoria?->nome ?? 'Atrativo oficial';
+                        @endphp
 
-                    <article class="place-card place-card--market" id="gastronomia">
-                        <img src="{{ asset('images/local-market.webp') }}" alt="Mesa de mercado com alimentos, cerâmicas e sabores locais">
-                        <a class="place-card__content" href="{{ route('dining.show', 'mercado-de-sabores-e-peixe-fresco') }}">
-                            <span>
-                                <strong>Mercado de Sabores e Peixe Fresco</strong>
-                                <small>Gastronomia&nbsp;&nbsp;·&nbsp;&nbsp;60 min</small>
-                            </span>
-                            <span class="place-card__arrow" aria-hidden="true">→</span>
-                        </a>
-                    </article>
-
-                    <article class="place-card place-card--viewpoint" id="natureza">
-                        <img src="{{ asset('images/rota-viva-hero.webp') }}" alt="Vista do mar e das montanhas a partir de um mirante arborizado">
-                        <a class="place-card__content" href="{{ route('tourist-spots.show', 'mirante-do-encontro-pontinha') }}">
-                            <span>
-                                <strong>Mirante do Encontro e Pontinha</strong>
-                                <small>Natureza&nbsp;&nbsp;·&nbsp;&nbsp;60 min</small>
-                            </span>
-                            <span class="place-card__arrow" aria-hidden="true">→</span>
-                        </a>
-                    </article>
+                        <article class="place-card {{ ['place-card--culture', 'place-card--market', 'place-card--viewpoint'][$loop->index] ?? '' }}" id="{{ $place->slug }}">
+                            <img src="{{ $imageUrl }}" alt="{{ $media?->descricao_acessibilidade ?: $place->nome }}">
+                            <a class="place-card__content" href="{{ route('tourist-spots.show', $place->slug) }}">
+                                <span>
+                                    <strong>{{ $place->nome }}</strong>
+                                    <small>{{ $categoryName }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ $place->duracao_minutos }} min</small>
+                                </span>
+                                <span class="place-card__arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                    @empty
+                        <article class="place-card place-card--culture" id="cultura">
+                            <img src="{{ asset('images/cultural-center.webp') }}" alt="Centro cultural instalado em construção histórica com portas verdes">
+                            <a class="place-card__content" href="{{ route('tourist-spots.index') }}">
+                                <span>
+                                    <strong>Atrativos oficiais da cidade</strong>
+                                    <small>Conteúdo municipal&nbsp;&nbsp;·&nbsp;&nbsp;em cadastro</small>
+                                </span>
+                                <span class="place-card__arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                    @endforelse
                 </div>
 
                 <p class="municipal-validation">
@@ -208,7 +217,7 @@
                     </div>
 
                     <div class="route-map" aria-label="Exemplo visual de uma rota adaptada após o início da chuva">
-                        <img src="{{ asset('images/rota-viva-hero.webp') }}" alt="">
+                        <img src="{{ $homeContent['hero_image_url'] }}" alt="">
                         <div class="route-map__shade"></div>
                         <svg class="route-map__path" aria-hidden="true" viewBox="0 0 620 440" preserveAspectRatio="none">
                             <path class="route-map__old" d="M145 48 C120 95 145 134 220 160 C280 182 315 235 265 276 C235 302 260 355 340 390"></path>
@@ -278,20 +287,24 @@
             <section class="local-economy" id="economia-local" aria-labelledby="economy-title">
                 <div class="local-economy__copy">
                     <div>
-                        <p class="eyebrow">Economia local</p>
-                        <h2 id="economy-title">Cada rota também<br>movimenta o território</h2>
-                        <p>Pequenos negócios, experiências culturais e lugares menos conhecidos passam a fazer parte do percurso de forma relevante — nunca como publicidade invasiva.</p>
-                        <p class="local-opportunities"><span aria-hidden="true">♧</span> + oportunidades locais no caminho</p>
-                        <a class="text-link" href="{{ route('guides.index') }}">Conheça quem faz a cidade <span aria-hidden="true">→</span></a>
+                        <p class="eyebrow">{{ $homeContent['local_economy_eyebrow'] }}</p>
+                        <h2 id="economy-title">{!! nl2br(e($homeContent['local_economy_title'])) !!}</h2>
+                        <p>{{ $homeContent['local_economy_description'] }}</p>
+                        @if ($homeContent['local_economy_stat'])
+                            <p class="local-opportunities"><span aria-hidden="true">♧</span> {{ $homeContent['local_economy_stat'] }}</p>
+                        @endif
+                        @if ($homeContent['local_economy_link_label'])
+                            <a class="text-link" href="{{ $homeContent['local_economy_link_url'] }}">{{ $homeContent['local_economy_link_label'] }} <span aria-hidden="true">→</span></a>
+                        @endif
                     </div>
                 </div>
                 <div class="local-economy__image">
-                    <img src="{{ asset('images/local-artisan.webp') }}" alt="Artesã local sorrindo enquanto modela uma peça de cerâmica">
+                    <img src="{{ $homeContent['local_economy_image_url'] }}" alt="{{ $homeContent['local_economy_image_alt'] }}">
                 </div>
             </section>
 
             <section class="final-cta" id="comece-agora" aria-labelledby="final-cta-title">
-                <img src="{{ asset('images/rota-viva-hero.webp') }}" alt="Vista panorâmica de uma cidade histórica à beira-mar">
+                <img src="{{ $homeContent['hero_image_url'] }}" alt="{{ $homeContent['hero_image_alt'] }}">
                 <div class="page-container final-cta__content">
                     <div class="final-cta__panel">
                         <h2 id="final-cta-title">Sua próxima<br>experiência começa aqui</h2>

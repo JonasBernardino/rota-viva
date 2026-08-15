@@ -47,7 +47,7 @@
                             @php
                                 $name = $item->name ?? $item->title ?? 'Item';
                                 $categoryName = $item->category->name ?? (is_string($item->category ?? null) ? ucfirst($item->category) : ($item->business_type ?? 'Oficial'));
-                                $location = $item->neighborhood ?? $item->location_name ?? $item->address ?? 'Lucena — PB';
+                                $location = $item->neighborhood ?? $item->location_name ?? $item->address ?? (($currentTenant->uf ?? null) ? ($currentTenant->nome.' — '.$currentTenant->uf) : ($currentTenant->nome ?? 'Município'));
                                 $hasSeal = !empty($item->has_seal_of_quality);
                             @endphp
                             <tr style="border-bottom: 1px solid #f1f5f9;">

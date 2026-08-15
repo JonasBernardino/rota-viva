@@ -225,6 +225,16 @@
 
                 <div class="admin-dashboard-header__actions">
 
+                    <a
+                        href="{{ route('admin.appearance.edit') }}"
+                        class="admin-logout-button"
+                        style="text-decoration: none;"
+                    >
+                        <span>
+                            Aparência da cidade
+                        </span>
+                    </a>
+
                     <form
                         method="get"
                         action="{{ route('admin.dashboard') }}"

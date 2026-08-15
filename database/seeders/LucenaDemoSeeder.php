@@ -8,6 +8,7 @@ use App\Models\Estabelecimento;
 use App\Models\Evento;
 use App\Models\HorarioAtrativo;
 use App\Models\ItemRoteiro;
+use App\Models\MidiaAtrativo;
 use App\Models\Municipio;
 use App\Models\PreferenciaVisitante;
 use App\Models\RecursoAcessibilidade;
@@ -46,6 +47,26 @@ class LucenaDemoSeeder extends Seeder
                 '127.0.0.1',
             ]);
         }
+
+        $municipality->update([
+            'brand_name' => 'ROTA VIVA',
+            'hero_eyebrow' => 'Turismo inteligente',
+            'hero_title' => 'Como você quer viver Lucena hoje?',
+            'hero_description' => 'Conte o que você procura e receba uma experiência em Lucena que se adapta ao seu tempo, orçamento e interesses.',
+            'hero_image_path' => '/images/rota-viva-hero.webp',
+            'hero_image_alt' => 'Vista de Lucena com mar, centro histórico e paisagem natural',
+            'hero_search_placeholder' => 'Ex.: Quero cultura e tranquilidade em Lucena, tenho 4 horas...',
+            'hero_card_title' => 'Sua experiência em Lucena, em movimento',
+            'hero_card_tags' => ['4 horas', 'Família', 'Cultura'],
+            'local_economy_eyebrow' => 'Economia local',
+            'local_economy_title' => 'Cada rota também movimenta Lucena',
+            'local_economy_description' => 'Pequenos negócios, experiências culturais e lugares menos conhecidos passam a fazer parte do percurso de forma relevante — nunca como publicidade invasiva.',
+            'local_economy_stat' => '+ oportunidades locais no caminho',
+            'local_economy_link_label' => 'Conheça quem faz Lucena',
+            'local_economy_link_url' => null,
+            'local_economy_image_path' => '/images/local-artisan.webp',
+            'local_economy_image_alt' => 'Artesã local sorrindo enquanto modela uma peça de cerâmica',
+        ]);
 
         // Define o município atual para popular dados com municipio_id
         $tenantManager->switchTo($municipality);
@@ -190,6 +211,39 @@ class LucenaDemoSeeder extends Seeder
                 'tags' => ['gastronomia', 'peixada', 'frutos do mar', 'culinária local', 'mercado'],
             ]);
             $pMercado->recursosAcessibilidade()->sync([$featRamp->id, $featBathroom->id, $featTactile->id]);
+
+            MidiaAtrativo::updateOrCreate(
+                ['atrativo_id' => $pCentroCultural->id, 'url' => '/images/cultural-center.webp'],
+                [
+                    'tipo' => 'image',
+                    'titulo' => 'Centro Cultural e Memória de Lucena',
+                    'descricao_acessibilidade' => 'Centro cultural instalado em construção histórica com portas verdes',
+                    'is_destaque' => true,
+                    'ordem' => 1,
+                ]
+            );
+
+            MidiaAtrativo::updateOrCreate(
+                ['atrativo_id' => $pMercado->id, 'url' => '/images/local-market.webp'],
+                [
+                    'tipo' => 'image',
+                    'titulo' => 'Mercado de Sabores e Peixe Fresco',
+                    'descricao_acessibilidade' => 'Mesa de mercado com alimentos, cerâmicas e sabores locais',
+                    'is_destaque' => true,
+                    'ordem' => 2,
+                ]
+            );
+
+            MidiaAtrativo::updateOrCreate(
+                ['atrativo_id' => $pMirante->id, 'url' => '/images/rota-viva-hero.webp'],
+                [
+                    'tipo' => 'image',
+                    'titulo' => 'Mirante do Encontro e Pontinha',
+                    'descricao_acessibilidade' => 'Vista do mar e das montanhas a partir de um mirante arborizado',
+                    'is_destaque' => true,
+                    'ordem' => 3,
+                ]
+            );
 
             $pPraiaLucena = Atrativo::updateOrCreate(['slug' => 'praia-de-lucena-coqueirais'], [
                 'categoria_id' => $catBeaches->id,

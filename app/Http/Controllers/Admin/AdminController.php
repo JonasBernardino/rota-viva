@@ -7,12 +7,14 @@ use App\Models\Atrativo;
 use App\Models\Categoria;
 use App\Models\Estabelecimento;
 use App\Models\Evento;
+use App\Models\MidiaAtrativo;
 use App\Models\PreferenciaVisitante;
 use App\Models\Roteiro;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -62,13 +64,15 @@ class AdminController extends Controller
     {
         $data = $this->validatedData($request, $module);
 
-        DB::transaction(function () use ($data, $module): void {
-            match ($this->modelTypeForModule($module)) {
+        DB::transaction(function () use ($data, $module, $request): void {
+            $item = match ($this->modelTypeForModule($module)) {
                 'place' => Atrativo::create($this->placePayload($data, $module)),
                 'business' => Estabelecimento::create($this->businessPayload($data, $module)),
                 'event' => Evento::create($this->eventPayload($data)),
                 'itinerary' => $this->createOfficialItinerary($data),
             };
+
+            $this->storeImageForItem($request, $module, $item);
         });
 
         return redirect()
@@ -95,6 +99,8 @@ class AdminController extends Controller
                 'event' => $item->update($this->eventPayload($data)),
                 'itinerary' => $item->update($this->itineraryPayload($data)),
             };
+
+            $this->storeImageForItem(request(), $module, $item);
         });
 
         return redirect()
@@ -172,8 +178,8 @@ class AdminController extends Controller
     private function queryForModule(string $module)
     {
         return match ($module) {
-            'tourist-spots' => Atrativo::with(['categoria', 'recursosAcessibilidade']),
-            'culture' => Atrativo::whereHas('categoria', fn ($query) => $query->whereIn('slug', ['patrimonio-historico', 'cultura-e-tradicao']))->with('categoria'),
+            'tourist-spots' => Atrativo::with(['categoria', 'recursosAcessibilidade', 'midias']),
+            'culture' => Atrativo::whereHas('categoria', fn ($query) => $query->whereIn('slug', ['patrimonio-historico', 'cultura-e-tradicao']))->with(['categoria', 'midias']),
             'establishments' => Estabelecimento::whereIn('tipo_estabelecimento', ['hospedagem', 'gastronomia', 'lodging', 'gastronomy']),
             'tours' => Estabelecimento::whereIn('tipo_estabelecimento', ['atividade', 'guia_turistico', 'activity', 'tour_guide']),
             'guides' => Estabelecimento::whereIn('tipo_estabelecimento', ['guia_turistico', 'tour_guide']),
@@ -219,6 +225,8 @@ class AdminController extends Controller
                 'is_ar_livre' => ['nullable', 'boolean'],
                 'adequado_criancas' => ['nullable', 'boolean'],
                 'is_disponivel' => ['nullable', 'boolean'],
+                'imagem' => ['nullable', 'image', 'max:4096'],
+                'imagem_alt' => ['nullable', 'string', 'max:180'],
             ]),
             'business' => $request->validate([
                 'nome' => ['required', 'string', 'max:255'],
@@ -236,6 +244,7 @@ class AdminController extends Controller
                 'faixa_preco' => ['required', 'string', 'max:10'],
                 'tem_selo_qualidade' => ['nullable', 'boolean'],
                 'status_validacao' => ['required', 'in:pending,approved,rejected,suspended'],
+                'imagem' => ['nullable', 'image', 'max:4096'],
             ]),
             'event' => $request->validate([
                 'nome' => ['required', 'string', 'max:255'],
@@ -254,6 +263,7 @@ class AdminController extends Controller
                 'organizador' => ['nullable', 'string', 'max:255'],
                 'capacidade' => ['nullable', 'integer', 'min:1'],
                 'status' => ['required', 'in:scheduled,draft,cancelled,finished'],
+                'imagem' => ['nullable', 'image', 'max:4096'],
             ]),
             'itinerary' => $request->validate([
                 'titulo' => ['required', 'string', 'max:255'],
@@ -358,7 +368,7 @@ class AdminController extends Controller
     /**
      * @param  array<string, mixed>  $data
      */
-    private function createOfficialItinerary(array $data): void
+    private function createOfficialItinerary(array $data): Roteiro
     {
         $preference = PreferenciaVisitante::create([
             'descricao_original' => 'Roteiro oficial criado pela gestão municipal.',
@@ -372,10 +382,71 @@ class AdminController extends Controller
             'intensidade' => null,
         ]);
 
-        Roteiro::create([
+        return Roteiro::create([
             ...$this->itineraryPayload($data),
             'preferencia_visitante_id' => $preference->id,
         ]);
+    }
+
+    private function storeImageForItem(Request $request, string $module, mixed $item): void
+    {
+        if (! $request->hasFile('imagem')) {
+            return;
+        }
+
+        $type = $this->modelTypeForModule($module);
+
+        if ($type === 'itinerary') {
+            return;
+        }
+
+        $path = $request
+            ->file('imagem')
+            ->store('municipal-content/'.$module, 'public');
+
+        match ($type) {
+            'place' => $this->storePlaceImage($item, $path, $request),
+            'business' => $this->replaceModelImage($item, 'imagem_capa', $path),
+            'event' => $this->replaceModelImage($item, 'imagem_url', $path),
+        };
+    }
+
+    private function storePlaceImage(Atrativo $place, string $path, Request $request): void
+    {
+        $oldMedia = $place->midias()->where('is_destaque', true)->first();
+
+        if ($oldMedia) {
+            $this->deleteStoredAsset($oldMedia->url);
+            $oldMedia->delete();
+        }
+
+        MidiaAtrativo::create([
+            'atrativo_id' => $place->id,
+            'tipo' => 'image',
+            'url' => $path,
+            'titulo' => $place->nome,
+            'descricao_acessibilidade' => $request->input('imagem_alt') ?: $place->nome,
+            'is_destaque' => true,
+            'ordem' => 0,
+        ]);
+    }
+
+    private function replaceModelImage(mixed $item, string $column, string $path): void
+    {
+        $this->deleteStoredAsset($item->{$column} ?? null);
+
+        $item->forceFill([
+            $column => $path,
+        ])->save();
+    }
+
+    private function deleteStoredAsset(?string $path): void
+    {
+        if (blank($path) || Str::startsWith($path, ['http://', 'https://', '/'])) {
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
     }
 
     /**

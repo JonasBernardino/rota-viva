@@ -14,7 +14,7 @@
     <section class="page-section">
         <div class="page-container">
             <div class="catalog-toolbar" aria-label="Informações do catálogo">
-                <strong>Catálogo Oficial de {{ $currentTenant->name ?? 'Lucena' }}</strong>
+                <strong>Catálogo Oficial de {{ $currentTenant->nome ?? 'Município' }}</strong>
                 <span>{{ count($items) }} {{ count($items) === 1 ? 'item oficial disponível' : 'itens oficiais disponíveis' }}</span>
             </div>
 
@@ -26,11 +26,25 @@
                         $desc = $item->description ?? $item->summary ?? '';
                         $categoryName = $item->category->name ?? (is_string($item->category ?? null) ? ucfirst($item->category) : null);
                         $location = $item->neighborhood ?? $item->location_name ?? $item->address ?? null;
+                        $media = collect($item->midias ?? [])->firstWhere('is_destaque', true) ?? collect($item->midias ?? [])->first();
+                        $itineraryMedia = collect($item->itens ?? [])
+                            ->map(fn ($routeItem) => $routeItem->atrativo?->midias?->firstWhere('is_destaque', true) ?? $routeItem->atrativo?->midias?->first())
+                            ->filter()
+                            ->first();
+                        $imagePath = $media?->url ?? $item->imagem_capa ?? $item->imagem_url ?? $itineraryMedia?->url ?? null;
+                        $imageUrl = $imagePath
+                            ? (\Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://', '/']) ? $imagePath : asset('storage/'.$imagePath))
+                            : null;
+                        $imageAlt = $media?->descricao_acessibilidade ?: $name;
                     @endphp
 
                     <article class="catalog-card">
-                        <div class="catalog-card__placeholder" aria-hidden="true">
-                            <span>{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                        <div class="catalog-card__media {{ $imageUrl ? '' : 'catalog-card__media--placeholder' }}">
+                            @if ($imageUrl)
+                                <img src="{{ $imageUrl }}" alt="{{ $imageAlt }}">
+                            @else
+                                <span aria-hidden="true">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                            @endif
                         </div>
 
                         <div class="catalog-card__content">

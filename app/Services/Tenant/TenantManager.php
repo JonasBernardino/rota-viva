@@ -4,6 +4,7 @@ namespace App\Services\Tenant;
 
 use App\Models\DominioMunicipio;
 use App\Models\Municipio;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -21,6 +22,12 @@ class TenantManager
     public function current(): ?Municipio
     {
         return $this->currentTenant;
+    }
+
+    public function currentOrFail(): Municipio
+    {
+        return $this->currentTenant
+            ?? throw new ModelNotFoundException('Município não identificado para esta requisição.');
     }
 
     /**

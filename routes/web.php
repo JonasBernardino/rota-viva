@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\MunicipalityAppearanceController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Platform\PlatformController;
 use App\Http\Controllers\Public\AdaptationController;
 use App\Http\Controllers\Public\CatalogController;
 use App\Http\Controllers\Public\CityMapController;
+use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ItineraryController;
 use App\Http\Controllers\Public\MunicipalityController;
 use Illuminate\Support\Facades\Route;
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::view('/', 'home')
+Route::get('/', HomeController::class)
     ->name('home');
 
 Route::get('/municipios/selecionar', MunicipalityController::class)
@@ -326,6 +328,16 @@ Route::middleware([
             '/',
             [DashboardController::class, 'index']
         )->name('dashboard');
+
+        Route::get(
+            '/aparencia',
+            [MunicipalityAppearanceController::class, 'edit']
+        )->name('appearance.edit');
+
+        Route::put(
+            '/aparencia',
+            [MunicipalityAppearanceController::class, 'update']
+        )->name('appearance.update');
 
         /*
         |--------------------------------------------------------------------------
