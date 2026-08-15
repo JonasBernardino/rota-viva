@@ -14,9 +14,16 @@ use App\Models\Roteiro;
 
 class ItineraryController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
-        return view('pages.route-builder');
+        $initialQuery = trim((string) $request->query(
+            'q',
+            $request->query('description', '')
+        ));
+
+        return view('pages.route-builder', [
+            'initialQuery' => mb_substr($initialQuery, 0, 2000),
+        ]);
     }
 
     public function store(
