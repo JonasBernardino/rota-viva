@@ -19,11 +19,17 @@
                     <strong>{{ count($items) }}</strong> registros cadastrados no município
                 </div>
                 <div>
-                    <button class="route-cta" type="button" style="padding: 8px 16px; font-size: 0.9rem;">
+                    <a class="route-cta" href="{{ route('admin.'.$module.'.create') }}" style="padding: 8px 16px; font-size: 0.9rem;">
                         + Novo Cadastro
-                    </button>
+                    </a>
                 </div>
             </div>
+
+            @if (session('status'))
+                <div class="admin-flash" role="status">
+                    {{ session('status') }}
+                </div>
+            @endif
 
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
@@ -66,13 +72,25 @@
                                     @endif
                                 </td>
                                 <td style="padding: 14px 16px; text-align: right;">
-                                    @if (isset($item->slug))
-                                        <a href="{{ route($module === 'culture' ? 'culture.show' : ($module === 'tourist-spots' ? 'tourist-spots.show' : ($module === 'events' ? 'agenda.show' : ($module === 'tours' ? 'tours.show' : ($module === 'guides' ? 'guides.show' : 'stays.show')))), $item->slug) }}" target="_blank" style="color: #0284c7; text-decoration: none; font-weight: 500; font-size: 0.85rem;">
-                                            Ver Público ↗
+                                    <div class="admin-table-actions">
+                                        <a href="{{ route('admin.'.$module.'.edit', $item->id) }}">
+                                            Editar
                                         </a>
-                                    @else
-                                        <span style="color: #94a3b8; font-size: 0.85rem;">Validado</span>
+
+                                    @if (isset($item->slug))
+                                            @if ($publicRoute)
+                                                <a href="{{ route($publicRoute, $item->slug) }}" target="_blank" rel="noopener noreferrer">
+                                                    Ver público
+                                                </a>
+                                            @endif
                                     @endif
+
+                                        <form action="{{ route('admin.'.$module.'.destroy', $item->id) }}" method="post" onsubmit="return confirm('Remover este cadastro?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit">Excluir</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

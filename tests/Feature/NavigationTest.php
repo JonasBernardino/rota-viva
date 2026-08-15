@@ -36,7 +36,6 @@ class NavigationTest extends TestCase
             'stays' => ['stays.index'],
             'dining' => ['dining.index'],
             'route builder' => ['routes.create'],
-            'login' => ['login'],
             'about' => ['about'],
             'contact' => ['contact'],
             'accessibility resources' => ['accessibility.resources'],
@@ -80,6 +79,51 @@ class NavigationTest extends TestCase
         }
     }
 
+    public function test_manager_login_page_is_available_at_specific_admin_route(): void
+    {
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Acesso ao painel');
+
+        $this->assertSame(url('/gestor/entrar'), route('login'));
+    }
+
+    public function test_guest_navigation_does_not_show_login_or_manager_area(): void
+    {
+        $response = $this->get(route('home'));
+
+        $response->assertOk()
+            ->assertDontSee(route('login'), false)
+            ->assertDontSee('Entrar')
+            ->assertDontSee('Área do gestor')
+            ->assertDontSee('Sair');
+    }
+
+    public function test_authenticated_regular_user_navigation_shows_logout_without_manager_area(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('home'));
+
+        $response->assertOk()
+            ->assertSee(route('logout'), false)
+            ->assertSee('Sair')
+            ->assertDontSee('Área do gestor');
+    }
+
+    public function test_authenticated_manager_navigation_shows_manager_area_and_logout(): void
+    {
+        $manager = User::factory()->manager()->create();
+
+        $response = $this->actingAs($manager)->get(route('home'));
+
+        $response->assertOk()
+            ->assertSee(route('admin.dashboard'), false)
+            ->assertSee(route('logout'), false)
+            ->assertSee('Área do gestor')
+            ->assertSee('Sair');
+    }
+
     public function test_guest_is_redirected_to_login_when_accessing_admin_panel(): void
     {
         $this->get(route('admin.dashboard'))->assertRedirect(route('login'));
@@ -91,7 +135,8 @@ class NavigationTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('admin.dashboard'))
-            ->assertForbidden();
+            ->assertForbidden()
+            ->assertSee('Você não tem permissão para acessar esta área');
     }
 
     public function test_manager_can_access_admin_pages(): void
@@ -118,6 +163,41 @@ class NavigationTest extends TestCase
 
         $response->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticated();
+    }
+
+    public function test_authenticated_user_is_redirected_away_from_login_page(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('login'))
+            ->assertRedirect(route('home'));
+    }
+
+    public function test_authenticated_manager_is_redirected_from_login_page_to_dashboard(): void
+    {
+        $manager = User::factory()->manager()->create();
+
+        $this->actingAs($manager)
+            ->get(route('login'))
+            ->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_regular_user_cannot_login_to_management_area(): void
+    {
+        User::factory()->create([
+            'email' => 'visitante@example.com',
+            'password' => bcrypt('12345678'),
+        ]);
+
+        $response = $this->from(route('login'))->post(route('login.post'), [
+            'email' => 'visitante@example.com',
+            'password' => '12345678',
+        ]);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
     }
 
     public function test_user_cannot_login_with_invalid_credentials(): void

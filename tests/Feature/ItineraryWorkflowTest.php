@@ -93,7 +93,9 @@ class ItineraryWorkflowTest extends TestCase
         $viewResponse = $this->get(route('routes.show', $itinerary));
         $viewResponse->assertOk()
             ->assertSee('Sua realidade mudou?')
-            ->assertSee('Começou a chover');
+            ->assertSee('Começou a chover')
+            ->assertSee(route('routes.adapt.rain', $itinerary), false)
+            ->assertDontSee(route('login'), false);
 
         // 4. Trigger rain adaptation
         $rainResponse = $this->post(route('routes.adapt.rain', $itinerary));
@@ -139,5 +141,28 @@ class ItineraryWorkflowTest extends TestCase
             ->assertOk()
             ->assertSee('Uma experiência do seu jeito')
             ->assertSee('Sua realidade mudou?');
+    }
+
+    public function test_guest_can_adapt_route_for_rain_without_login(): void
+    {
+        $mockAi = Mockery::mock(AiProvider::class);
+
+        $mockAi->shouldReceive('generateStructured')
+            ->andThrow(new RuntimeException('Ollama timeout'));
+
+        $this->app->instance(AiProvider::class, $mockAi);
+
+        $this->post(route('routes.store'), [
+            'description' => 'Quero cultura e tranquilidade, estou com uma criança, tenho quatro horas e orçamento de R$ 150.',
+        ]);
+
+        $itinerary = Roteiro::latest('id')->firstOrFail();
+
+        $this->assertGuest();
+
+        $this->post(route('routes.adapt.rain', $itinerary))
+            ->assertRedirect();
+
+        $this->assertNotNull($itinerary->adaptacoes()->first());
     }
 }

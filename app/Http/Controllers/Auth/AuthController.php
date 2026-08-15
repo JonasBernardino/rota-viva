@@ -13,8 +13,18 @@ class AuthController extends Controller
     /**
      * Show the authentication form.
      */
-    public function showLogin(): View
+    public function showLogin(): View|RedirectResponse
     {
+        $redirect = request()->query('redirect');
+
+        if (is_string($redirect) && $this->isInternalRedirect($redirect)) {
+            session()->put('url.intended', $redirect);
+        }
+
+        if (Auth::check()) {
+            return redirect()->intended($this->authenticatedHome(request()->user()));
+        }
+
         return view('pages.login');
     }
 
@@ -31,11 +41,18 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            if ($request->user()->can_access_admin_panel) {
-                return redirect()->intended(route('admin.dashboard'));
+            if (! (bool) ($request->user()->can_access_admin_panel ?? false)) {
+                Auth::logout();
+
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Este acesso é exclusivo para a gestão municipal.',
+                ])->onlyInput('email');
             }
 
-            return redirect()->intended(route('home'));
+            return redirect()->intended($this->authenticatedHome($request->user()));
         }
 
         return back()->withErrors([
@@ -54,5 +71,25 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home');
+    }
+
+    private function isInternalRedirect(string $redirect): bool
+    {
+        $host = parse_url($redirect, PHP_URL_HOST);
+
+        if ($host === null) {
+            return str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//');
+        }
+
+        return $host === request()->getHost();
+    }
+
+    private function authenticatedHome(mixed $user): string
+    {
+        if ((bool) ($user->can_access_admin_panel ?? false)) {
+            return route('admin.dashboard');
+        }
+
+        return route('home');
     }
 }

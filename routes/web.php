@@ -62,9 +62,10 @@ Route::get('/minha-rota/{itinerary}', [ItineraryController::class, 'show'])->nam
 Route::post('/minha-rota/{itinerary}/adaptar/chuva', [AdaptationController::class, 'rain'])->name('routes.adapt.rain');
 Route::get('/minha-rota/{itinerary}/adaptacoes/{adaptation}', [AdaptationController::class, 'show'])->name('routes.adaptation.show');
 
-// Autenticação Real
-Route::get('/entrar', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/entrar', [AuthController::class, 'login'])->name('login.post');
+// Autenticação da gestão municipal
+Route::redirect('/entrar', '/gestor/entrar');
+Route::get('/gestor/entrar', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/gestor/entrar', [AuthController::class, 'login'])->name('login.post');
 Route::post('/sair', [AuthController::class, 'logout'])->name('logout');
 
 $institutionalPages = [
@@ -99,5 +100,28 @@ Route::middleware(['auth', 'can:access-admin-panel'])->prefix('gestor')->name('a
         Route::get('/'.$name, [AdminController::class, 'module'])
             ->defaults('module', $name)
             ->name($name.'.index');
+
+        Route::get('/'.$name.'/novo', [AdminController::class, 'create'])
+            ->defaults('module', $name)
+            ->name($name.'.create');
+
+        Route::post('/'.$name, [AdminController::class, 'store'])
+            ->defaults('module', $name)
+            ->name($name.'.store');
+
+        Route::get('/'.$name.'/{id}/editar', [AdminController::class, 'edit'])
+            ->defaults('module', $name)
+            ->whereNumber('id')
+            ->name($name.'.edit');
+
+        Route::put('/'.$name.'/{id}', [AdminController::class, 'update'])
+            ->defaults('module', $name)
+            ->whereNumber('id')
+            ->name($name.'.update');
+
+        Route::delete('/'.$name.'/{id}', [AdminController::class, 'destroy'])
+            ->defaults('module', $name)
+            ->whereNumber('id')
+            ->name($name.'.destroy');
     }
 });
