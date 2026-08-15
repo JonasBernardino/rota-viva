@@ -1,5 +1,21 @@
 @extends('layouts.public')
 
+@php
+    $mapStops = $itinerary->items
+        ->map(function ($item) {
+            return [
+                'id' => $item->place->id,
+                'name' => $item->place->name,
+                'category' => $item->place->category?->name,
+                'latitude' => $item->place->latitude,
+                'longitude' => $item->place->longitude,
+                'duration' => $item->duration_minutes,
+                'cost' => $item->estimated_cost,
+            ];
+        })
+        ->values();
+@endphp
+
 @section('title', $itinerary->title)
 
 @section('description', $itinerary->summary)
@@ -97,8 +113,48 @@
 
                 <aside class="route-result-map">
 
-                    <div id="route-map">
-                        {{-- Leaflet entra aqui depois --}}
+                    <div class="route-map-wrapper">
+
+                        <div id="route-map" class="route-map-container" data-route-map data-map-type="route"
+                            data-stops='@json($mapStops)' aria-label="Mapa das paradas da sua rota"></div>
+
+                        <div class="route-map-location-warning" data-location-warning hidden role="status">
+                            <span aria-hidden="true">⌖</span>
+
+                            <div>
+                                <strong>
+                                    Não conseguimos acessar sua localização.
+                                </strong>
+
+                                <p>
+                                    Você ainda pode visualizar normalmente
+                                    as paradas da sua rota.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="route-map-fallback" data-map-fallback hidden role="status">
+                            <span class="route-map-fallback__icon" aria-hidden="true">
+                                ⌖
+                            </span>
+
+                            <div>
+                                <p class="eyebrow">
+                                    Mapa indisponível
+                                </p>
+
+                                <h3>
+                                    Não foi possível carregar o mapa.
+                                </h3>
+
+                                <p>
+                                    Sua rota continua disponível.
+                                    Use os botões de navegação das paradas
+                                    para abrir o Google Maps ou Waze.
+                                </p>
+                            </div>
+                        </div>
+
                     </div>
 
                 </aside>

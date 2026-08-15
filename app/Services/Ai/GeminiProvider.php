@@ -3,8 +3,10 @@
 namespace App\Services\Ai;
 
 use App\Contracts\AiProvider;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Throwable;
 
 class GeminiProvider implements AiProvider
 {
@@ -24,40 +26,66 @@ class GeminiProvider implements AiProvider
             $this->model
         );
 
-        $response = Http::withHeaders([
-            'x-goog-api-key' => $this->apiKey,
-            'Content-Type' => 'application/json',
-        ])
-            ->timeout(20)
-            ->post($url, [
-                'system_instruction' => [
-                    'parts' => [
-                        [
-                            'text' => $systemPrompt,
-                        ],
-                    ],
-                ],
-
-                'contents' => [
-                    [
-                        'role' => 'user',
+        try {
+            $response = Http::withHeaders([
+                'x-goog-api-key' => $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])
+                ->connectTimeout(5)
+                ->timeout(12)
+                ->retry(
+                    times: 2,
+                    sleepMilliseconds: 500,
+                    throw: false,
+                )
+                ->post($url, [
+                    'system_instruction' => [
                         'parts' => [
                             [
-                                'text' => $userPrompt,
+                                'text' => $systemPrompt,
                             ],
                         ],
                     ],
-                ],
 
-                'generation_config' => [
-                    'response_mime_type' => 'application/json',
-                    'response_json_schema' => $schema,
-                ],
-            ]);
+                    'contents' => [
+                        [
+                            'role' => 'user',
+
+                            'parts' => [
+                                [
+                                    'text' => $userPrompt,
+                                ],
+                            ],
+                        ],
+                    ],
+
+                    'generation_config' => [
+                        'response_mime_type' =>
+                            'application/json',
+
+                        'response_json_schema' =>
+                            $schema,
+                    ],
+                ]);
+
+        } catch (ConnectionException $exception) {
+            throw new RuntimeException(
+                'Serviço de inteligência artificial indisponível.',
+                previous: $exception,
+            );
+        } catch (Throwable $exception) {
+            throw new RuntimeException(
+                'Não foi possível consultar o serviço de inteligência artificial.',
+                previous: $exception,
+            );
+        }
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Erro ao consultar Gemini: '.$response->body()
+                sprintf(
+                    'Erro ao consultar Gemini. HTTP %s.',
+                    $response->status()
+                )
             );
         }
 
@@ -74,7 +102,10 @@ class GeminiProvider implements AiProvider
             );
         }
 
-        $decoded = json_decode($text, true);
+        $decoded = json_decode(
+            $text,
+            true
+        );
 
         if (!is_array($decoded)) {
             throw new RuntimeException(

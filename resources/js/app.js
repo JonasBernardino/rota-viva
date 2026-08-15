@@ -1,6 +1,7 @@
 import '../css/app.css';
 
 import * as bootstrap from 'bootstrap';
+import { initializeRouteMaps } from './maps/route-map';
 
 window.bootstrap = bootstrap;
 
@@ -23,3 +24,10 @@ contrastButton?.addEventListener('click', () => {
     const isHighContrast = document.body.classList.toggle('high-contrast');
     contrastButton.setAttribute('aria-pressed', String(isHighContrast));
 });
+
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+        initializeRouteMaps();
+    },
+);

@@ -9,6 +9,7 @@ use App\Services\Ai\AiPreferenceInterpreter;
 use App\Services\Itinerary\ItineraryPersistenceService;
 use App\Services\Itinerary\ItineraryService;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class ItineraryController extends Controller
 {
@@ -16,7 +17,7 @@ class ItineraryController extends Controller
     {
         return view('pages.route-builder', [
             'initialQuery' =>
-                $request->query('q'),
+            $request->query('q'),
         ]);
     }
 
@@ -37,9 +38,20 @@ class ItineraryController extends Controller
         ]);
 
         // 1. Gemini interpreta linguagem natural.
-        $preferences = $interpreter->interpret(
-            $data['description']
-        );
+        try {
+            $preferences = $interpreter->interpret(
+                $data['description']
+            );
+        } catch (RuntimeException $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with(
+                    'ai_error',
+                    'Não conseguimos interpretar sua solicitação agora. Tente novamente em alguns instantes.'
+                );
+        }
 
         // 2. Laravel seleciona os locais.
         $generated = $itineraryService->generate(
