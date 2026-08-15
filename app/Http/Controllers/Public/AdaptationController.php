@@ -36,30 +36,23 @@ class AdaptationController extends Controller
                 ) {
                     $adaptation =
                         RouteAdaptation::create([
-                            'itinerary_id' =>
-                                $itinerary->id,
+                            'itinerary_id' => $itinerary->id,
 
-                            'event' =>
-                                'RAIN_STARTED',
+                            'event' => 'RAIN_STARTED',
 
-                            'title' =>
-                                $narrative->title,
+                            'title' => $narrative->title,
 
-                            'summary' =>
-                                $narrative->summary,
+                            'summary' => $narrative->summary,
 
-                            'total_duration_minutes' =>
-                                $adapted
-                                    ->totalDurationMinutes,
+                            'total_duration_minutes' => $adapted
+                                ->totalDurationMinutes,
 
-                            'total_estimated_cost' =>
-                                $adapted
-                                    ->totalEstimatedCost,
+                            'total_estimated_cost' => $adapted
+                                ->totalEstimatedCost,
                         ]);
 
                     foreach (
-                        $adapted->stops
-                        as $position => $stop
+                        $adapted->stops as $position => $stop
                     ) {
                         $action =
                             in_array(
@@ -73,34 +66,27 @@ class AdaptationController extends Controller
                         $adaptation
                             ->items()
                             ->create([
-                                'place_id' =>
-                                    $stop->placeId,
+                                'place_id' => $stop->placeId,
 
-                                'position' =>
-                                    $position + 1,
+                                'position' => $position + 1,
 
-                                'action' =>
-                                    $action,
+                                'action' => $action,
 
-                                'duration_minutes' =>
-                                    $stop
-                                        ->durationMinutes,
+                                'duration_minutes' => $stop
+                                    ->durationMinutes,
 
-                                'estimated_cost' =>
-                                    $stop
-                                        ->estimatedCost,
+                                'estimated_cost' => $stop
+                                    ->estimatedCost,
 
-                                'reason' =>
-                                    $this->findReason(
-                                        $narrative->changes,
-                                        $stop->placeId
-                                    ),
+                                'reason' => $this->findReason(
+                                    $narrative->changes,
+                                    $stop->placeId
+                                ),
                             ]);
                     }
 
                     foreach (
-                        $adapted->removedPlaceIds
-                        as $removedId
+                        $adapted->removedPlaceIds as $removedId
                     ) {
                         $original =
                             $itinerary
@@ -110,33 +96,27 @@ class AdaptationController extends Controller
                                     $removedId
                                 );
 
-                        if (!$original) {
+                        if (! $original) {
                             continue;
                         }
 
                         $adaptation
                             ->items()
                             ->create([
-                                'place_id' =>
-                                    $removedId,
+                                'place_id' => $removedId,
 
-                                'position' =>
-                                    $original
-                                        ->position,
+                                'position' => $original
+                                    ->position,
 
-                                'action' =>
-                                    'REMOVED',
+                                'action' => 'REMOVED',
 
-                                'duration_minutes' =>
-                                    $original
-                                        ->duration_minutes,
+                                'duration_minutes' => $original
+                                    ->duration_minutes,
 
-                                'estimated_cost' =>
-                                    $original
-                                        ->estimated_cost,
+                                'estimated_cost' => $original
+                                    ->estimated_cost,
 
-                                'reason' =>
-                                    'Removido porque a atividade é externa e começou a chover.',
+                                'reason' => 'Removido porque a atividade é externa e começou a chover.',
                             ]);
                     }
 
@@ -147,11 +127,9 @@ class AdaptationController extends Controller
         return redirect()->route(
             'routes.adaptation.show',
             [
-                'itinerary' =>
-                    $itinerary,
+                'itinerary' => $itinerary,
 
-                'adaptation' =>
-                    $adaptation,
+                'adaptation' => $adaptation,
             ]
         );
     }

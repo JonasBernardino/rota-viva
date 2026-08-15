@@ -88,8 +88,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Estação Cabo Branco',
                     'slug' => 'estacao-cabo-branco',
 
-                    'description' =>
-                        'Espaço dedicado à ciência, cultura e artes, com arquitetura marcante e programação cultural.',
+                    'description' => 'Espaço dedicado à ciência, cultura e artes, com arquitetura marcante e programação cultural.',
 
                     'duration_minutes' => 90,
 
@@ -155,8 +154,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Centro Cultural São Francisco',
                     'slug' => 'centro-cultural-sao-francisco',
 
-                    'description' =>
-                        'Conjunto histórico e cultural no Centro Histórico de João Pessoa.',
+                    'description' => 'Conjunto histórico e cultural no Centro Histórico de João Pessoa.',
 
                     'duration_minutes' => 75,
 
@@ -221,8 +219,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Hotel Globo',
                     'slug' => 'hotel-globo',
 
-                    'description' =>
-                        'Patrimônio histórico no Varadouro, conhecido pela arquitetura e vista para o Rio Sanhauá.',
+                    'description' => 'Patrimônio histórico no Varadouro, conhecido pela arquitetura e vista para o Rio Sanhauá.',
 
                     'duration_minutes' => 45,
 
@@ -285,8 +282,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Farol do Cabo Branco',
                     'slug' => 'farol-do-cabo-branco',
 
-                    'description' =>
-                        'Um dos cartões-postais da cidade, localizado na região do Cabo Branco e Ponta do Seixas.',
+                    'description' => 'Um dos cartões-postais da cidade, localizado na região do Cabo Branco e Ponta do Seixas.',
 
                     'duration_minutes' => 45,
 
@@ -353,8 +349,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Mercado de Artesanato Paraibano',
                     'slug' => 'mercado-de-artesanato-paraibano',
 
-                    'description' =>
-                        'Espaço dedicado ao artesanato e à produção cultural paraibana.',
+                    'description' => 'Espaço dedicado ao artesanato e à produção cultural paraibana.',
 
                     'duration_minutes' => 60,
 
@@ -422,8 +417,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Praia do Jacaré',
                     'slug' => 'praia-do-jacare',
 
-                    'description' =>
-                        'Atrativo turístico de Cabedelo conhecido especialmente pela experiência do pôr do sol às margens do Rio Paraíba.',
+                    'description' => 'Atrativo turístico de Cabedelo conhecido especialmente pela experiência do pôr do sol às margens do Rio Paraíba.',
 
                     'duration_minutes' => 90,
 
@@ -493,8 +487,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Parque Estadual Marinho de Areia Vermelha',
                     'slug' => 'areia-vermelha',
 
-                    'description' =>
-                        'Área marinha protegida em Cabedelo, conhecida pelo banco de areia e ambiente recifal.',
+                    'description' => 'Área marinha protegida em Cabedelo, conhecida pelo banco de areia e ambiente recifal.',
 
                     'duration_minutes' => 180,
 
@@ -564,8 +557,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Piscinas Naturais de Picãozinho',
                     'slug' => 'piscinas-naturais-picaozinho',
 
-                    'description' =>
-                        'Experiência marítima nas piscinas naturais próximas à orla de João Pessoa.',
+                    'description' => 'Experiência marítima nas piscinas naturais próximas à orla de João Pessoa.',
 
                     'duration_minutes' => 150,
 
@@ -626,8 +618,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Parque Solon de Lucena',
                     'slug' => 'parque-solon-de-lucena',
 
-                    'description' =>
-                        'Um dos espaços urbanos mais tradicionais da região central de João Pessoa.',
+                    'description' => 'Um dos espaços urbanos mais tradicionais da região central de João Pessoa.',
 
                     'duration_minutes' => 60,
 
@@ -691,8 +682,7 @@ class DemoTourismSeeder extends Seeder
                     'name' => 'Mangai',
                     'slug' => 'mangai',
 
-                    'description' =>
-                        'Experiência gastronômica voltada à culinária regional nordestina.',
+                    'description' => 'Experiência gastronômica voltada à culinária regional nordestina.',
 
                     'duration_minutes' => 90,
 
@@ -775,10 +765,9 @@ class DemoTourismSeeder extends Seeder
                 $placeDefinition['accessibility']
             )
                 ->map(
-                    fn ($slug) =>
-                        $accessibilityFeatures
-                            ->get($slug)
-                            ?->id
+                    fn ($slug) => $accessibilityFeatures
+                        ->get($slug)
+                        ?->id
                 )
                 ->filter()
                 ->values()
@@ -805,8 +794,7 @@ class DemoTourismSeeder extends Seeder
                 ->delete();
 
             foreach (
-                $placeDefinition['schedule']
-                as $dayOfWeek => $schedule
+                $placeDefinition['schedule'] as $dayOfWeek => $schedule
             ) {
                 /*
                  * null = fechado naquele dia.

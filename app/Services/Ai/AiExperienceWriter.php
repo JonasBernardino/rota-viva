@@ -65,27 +65,21 @@ PROMPT;
             'visitor' => [
                 'moods' => $preferences->moods,
                 'interests' => $preferences->interests,
-                'available_minutes' =>
-                $preferences->availableMinutes,
+                'available_minutes' => $preferences->availableMinutes,
                 'budget' => $preferences->budget,
-                'has_children' =>
-                $preferences->hasChildren,
-                'intensity' =>
-                $preferences->intensity,
-                'accessibility' =>
-                $preferences
+                'has_children' => $preferences->hasChildren,
+                'intensity' => $preferences->intensity,
+                'accessibility' => $preferences
                     ->accessibilityRequirements,
             ],
 
             'selected_stops' => array_map(
-                fn($stop) => [
+                fn ($stop) => [
                     'place_id' => $stop->placeId,
                     'name' => $stop->name,
                     'category' => $stop->category,
-                    'duration_minutes' =>
-                    $stop->durationMinutes,
-                    'estimated_cost' =>
-                    $stop->estimatedCost,
+                    'duration_minutes' => $stop->durationMinutes,
+                    'estimated_cost' => $stop->estimatedCost,
                 ],
                 $itinerary->stops
             ),

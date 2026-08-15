@@ -13,8 +13,7 @@ class RouteAdaptationService
 {
     public function __construct(
         private readonly PlaceRepository $places,
-    ) {
-    }
+    ) {}
 
     public function adaptForRain(
         Itinerary $itinerary
@@ -42,16 +41,11 @@ class RouteAdaptationService
                 name: $place->name,
                 category: $place->category?->name
                     ?? 'Experiência',
-                durationMinutes:
-                    $item->duration_minutes,
-                estimatedCost:
-                    $item->estimated_cost,
-                latitude:
-                    $place->latitude,
-                longitude:
-                    $place->longitude,
-                isOutdoor:
-                    $place->is_outdoor,
+                durationMinutes: $item->duration_minutes,
+                estimatedCost: $item->estimated_cost,
+                latitude: $place->latitude,
+                longitude: $place->longitude,
+                isOutdoor: $place->is_outdoor,
                 score: 0,
             );
         }
@@ -61,12 +55,10 @@ class RouteAdaptationService
                 stops: $kept,
                 removedPlaceIds: [],
                 addedPlaceIds: [],
-                totalDurationMinutes:
-                    collect($kept)
-                        ->sum('durationMinutes'),
-                totalEstimatedCost:
-                    collect($kept)
-                        ->sum('estimatedCost'),
+                totalDurationMinutes: collect($kept)
+                    ->sum('durationMinutes'),
+                totalEstimatedCost: collect($kept)
+                    ->sum('estimatedCost'),
             );
         }
 
@@ -88,26 +80,20 @@ class RouteAdaptationService
                 $replacementCandidates
                     ->shift();
 
-            if (!$replacement) {
+            if (! $replacement) {
                 continue;
             }
 
             $stop = new ItineraryStopDTO(
                 placeId: $replacement->id,
                 name: $replacement->name,
-                category:
-                    $replacement->category?->name
+                category: $replacement->category?->name
                     ?? 'Experiência',
-                durationMinutes:
-                    $replacement->duration_minutes,
-                estimatedCost:
-                    $replacement->average_cost,
-                latitude:
-                    $replacement->latitude,
-                longitude:
-                    $replacement->longitude,
-                isOutdoor:
-                    $replacement->is_outdoor,
+                durationMinutes: $replacement->duration_minutes,
+                estimatedCost: $replacement->average_cost,
+                latitude: $replacement->latitude,
+                longitude: $replacement->longitude,
+                isOutdoor: $replacement->is_outdoor,
                 score: 0,
             );
 
@@ -174,23 +160,21 @@ class RouteAdaptationService
         return $this->places
             ->getAvailablePlaces()
             ->filter(
-                fn (Place $place) =>
-                    !$place->is_outdoor
+                fn (Place $place) => ! $place->is_outdoor
             )
             ->reject(
-                fn (Place $place) =>
-                    in_array(
-                        $place->id,
-                        $excludedIds,
-                        true
-                    )
+                fn (Place $place) => in_array(
+                    $place->id,
+                    $excludedIds,
+                    true
+                )
             )
             ->filter(function (Place $place) use (
                 $preferences
             ) {
                 if (
                     $preferences->has_children
-                    && !$place->suitable_for_children
+                    && ! $place->suitable_for_children
                 ) {
                     return false;
                 }
@@ -206,11 +190,10 @@ class RouteAdaptationService
                 return true;
             })
             ->sortByDesc(
-                fn (Place $place) =>
-                    $this->calculateCompatibility(
-                        $place,
-                        $preferences
-                    )
+                fn (Place $place) => $this->calculateCompatibility(
+                    $place,
+                    $preferences
+                )
             )
             ->values();
     }
@@ -228,8 +211,7 @@ class RouteAdaptationService
         );
 
         foreach (
-            $preferences->interests ?? []
-            as $interest
+            $preferences->interests ?? [] as $interest
         ) {
             if (
                 $tags->contains(
@@ -241,8 +223,7 @@ class RouteAdaptationService
         }
 
         foreach (
-            $preferences->moods ?? []
-            as $mood
+            $preferences->moods ?? [] as $mood
         ) {
             if (
                 $tags->contains(

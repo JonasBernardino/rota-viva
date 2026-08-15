@@ -16,8 +16,7 @@ class ItineraryController extends Controller
     public function create(Request $request)
     {
         return view('pages.route-builder', [
-            'initialQuery' =>
-            $request->query('q'),
+            'initialQuery' => $request->query('q'),
         ]);
     }
 

@@ -12,8 +12,7 @@ class AiAdaptationWriter
 {
     public function __construct(
         private readonly AiProvider $ai,
-    ) {
-    }
+    ) {}
 
     public function explainRainAdaptation(
         Itinerary $original,
@@ -23,30 +22,24 @@ class AiAdaptationWriter
             $result =
                 $this->ai
                     ->generateStructured(
-                        systemPrompt:
-                            $this->systemPrompt(),
+                        systemPrompt: $this->systemPrompt(),
 
-                        userPrompt:
-                            $this->buildPrompt(
-                                $original,
-                                $adapted
-                            ),
+                        userPrompt: $this->buildPrompt(
+                            $original,
+                            $adapted
+                        ),
 
-                        schema:
-                            $this->schema(),
+                        schema: $this->schema(),
                     );
 
             return new AdaptationNarrativeDTO(
-                title:
-                    $result['title']
+                title: $result['title']
                     ?? 'Sua rota foi adaptada',
 
-                summary:
-                    $result['summary']
+                summary: $result['summary']
                     ?? 'Ajustamos sua rota por causa da chuva.',
 
-                changes:
-                    $result['changes']
+                changes: $result['changes']
                     ?? [],
             );
         } catch (Throwable) {
@@ -88,58 +81,45 @@ PROMPT;
         return json_encode([
             'event' => 'RAIN_STARTED',
 
-            'original_route' =>
-                $original->items
-                    ->map(
-                        fn ($item) => [
-                            'place_id' =>
-                                $item->place_id,
+            'original_route' => $original->items
+                ->map(
+                    fn ($item) => [
+                        'place_id' => $item->place_id,
 
-                            'name' =>
-                                $item->place->name,
+                        'name' => $item->place->name,
 
-                            'is_outdoor' =>
-                                $item
-                                    ->place
-                                    ->is_outdoor,
-                        ]
-                    )
-                    ->values()
-                    ->all(),
+                        'is_outdoor' => $item
+                            ->place
+                            ->is_outdoor,
+                    ]
+                )
+                ->values()
+                ->all(),
 
-            'removed_place_ids' =>
-                $adapted->removedPlaceIds,
+            'removed_place_ids' => $adapted->removedPlaceIds,
 
-            'added_place_ids' =>
-                $adapted->addedPlaceIds,
+            'added_place_ids' => $adapted->addedPlaceIds,
 
-            'new_route' =>
-                array_map(
-                    fn ($stop) => [
-                        'place_id' =>
-                            $stop->placeId,
+            'new_route' => array_map(
+                fn ($stop) => [
+                    'place_id' => $stop->placeId,
 
-                        'name' =>
-                            $stop->name,
+                    'name' => $stop->name,
 
-                        'duration_minutes' =>
-                            $stop
-                                ->durationMinutes,
+                    'duration_minutes' => $stop
+                        ->durationMinutes,
 
-                        'estimated_cost' =>
-                            $stop
-                                ->estimatedCost,
-                    ],
-                    $adapted->stops
-                ),
+                    'estimated_cost' => $stop
+                        ->estimatedCost,
+                ],
+                $adapted->stops
+            ),
 
-            'total_duration_minutes' =>
-                $adapted
-                    ->totalDurationMinutes,
+            'total_duration_minutes' => $adapted
+                ->totalDurationMinutes,
 
-            'total_estimated_cost' =>
-                $adapted
-                    ->totalEstimatedCost,
+            'total_estimated_cost' => $adapted
+                ->totalEstimatedCost,
 
         ], JSON_UNESCAPED_UNICODE);
     }
@@ -193,11 +173,9 @@ PROMPT;
     private function fallback(): AdaptationNarrativeDTO
     {
         return new AdaptationNarrativeDTO(
-            title:
-                'Sua rota foi adaptada à chuva',
+            title: 'Sua rota foi adaptada à chuva',
 
-            summary:
-                'Substituímos atividades externas por opções cobertas compatíveis com sua experiência.',
+            summary: 'Substituímos atividades externas por opções cobertas compatíveis com sua experiência.',
 
             changes: [],
         );

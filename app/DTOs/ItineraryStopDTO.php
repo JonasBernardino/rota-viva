@@ -14,6 +14,5 @@ class ItineraryStopDTO
         public readonly float $longitude,
         public readonly bool $isOutdoor,
         public readonly int $score,
-    ) {
-    }
+    ) {}
 }

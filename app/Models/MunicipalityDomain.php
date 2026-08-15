@@ -8,15 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'place_id',
-    'day_of_week',
-    'opens_at',
-    'closes_at',
-    'is_closed',
-    'is_holiday_open',
-    'notes',
+    'municipality_id',
+    'domain',
+    'is_primary',
+    'verified_at',
 ])]
-class PlaceSchedule extends Model
+class MunicipalityDomain extends Model
 {
     use HasFactory;
 
@@ -28,19 +25,18 @@ class PlaceSchedule extends Model
     protected function casts(): array
     {
         return [
-            'day_of_week' => 'integer',
-            'is_closed' => 'boolean',
-            'is_holiday_open' => 'boolean',
+            'is_primary' => 'boolean',
+            'verified_at' => 'datetime',
         ];
     }
 
     /**
-     * Place this schedule belongs to.
+     * The municipality that owns this domain.
      *
-     * @return BelongsTo<Place, $this>
+     * @return BelongsTo<Municipality, $this>
      */
-    public function place(): BelongsTo
+    public function municipality(): BelongsTo
     {
-        return $this->belongsTo(Place::class);
+        return $this->belongsTo(Municipality::class);
     }
 }

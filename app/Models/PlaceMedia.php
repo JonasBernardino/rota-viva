@@ -9,14 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'place_id',
-    'day_of_week',
-    'opens_at',
-    'closes_at',
-    'is_closed',
-    'is_holiday_open',
-    'notes',
+    'media_type',
+    'url',
+    'thumbnail_url',
+    'caption',
+    'author',
+    'license_info',
+    'is_cover',
+    'display_order',
 ])]
-class PlaceSchedule extends Model
+class PlaceMedia extends Model
 {
     use HasFactory;
 
@@ -28,14 +30,13 @@ class PlaceSchedule extends Model
     protected function casts(): array
     {
         return [
-            'day_of_week' => 'integer',
-            'is_closed' => 'boolean',
-            'is_holiday_open' => 'boolean',
+            'is_cover' => 'boolean',
+            'display_order' => 'integer',
         ];
     }
 
     /**
-     * Place this schedule belongs to.
+     * Place this media belongs to.
      *
      * @return BelongsTo<Place, $this>
      */

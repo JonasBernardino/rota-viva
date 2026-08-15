@@ -8,8 +8,7 @@ class ExperienceNarrativeDTO
         public readonly string $title,
         public readonly string $summary,
         public readonly array $reasons,
-    ) {
-    }
+    ) {}
 
     public function reasonFor(int $placeId): string
     {

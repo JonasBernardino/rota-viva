@@ -3,52 +3,95 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[Fillable([
+    'category_id',
+    'name',
+    'slug',
+    'description',
+    'latitude',
+    'longitude',
+    'is_outdoor',
+    'duration_minutes',
+    'average_cost',
+    'suitable_for_children',
+    'intensity',
+    'tags',
+    'is_available',
+])]
 class Place extends Model
 {
-    protected $fillable = [
-        'category_id',
-        'name',
-        'slug',
-        'description',
-        'duration_minutes',
-        'average_cost',
-        'is_outdoor',
-        'suitable_for_children',
-        'intensity',
-        'latitude',
-        'longitude',
-        'tags',
-        'is_available',
-    ];
+    use HasFactory;
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
-            'tags' => 'array',
-            'is_outdoor' => 'boolean',
-            'suitable_for_children' => 'boolean',
-            'is_available' => 'boolean',
-            'average_cost' => 'float',
             'latitude' => 'float',
             'longitude' => 'float',
+            'is_outdoor' => 'boolean',
+            'is_indoor' => 'boolean',
+            'duration_minutes' => 'integer',
+            'estimated_duration_minutes' => 'integer',
+            'average_cost' => 'float',
+            'cost' => 'decimal:2',
+            'is_free' => 'boolean',
+            'suitable_for_children' => 'boolean',
+            'suitable_for_kids' => 'boolean',
+            'suitable_for_seniors' => 'boolean',
+            'suitable_for_rain' => 'boolean',
+            'is_accessible' => 'boolean',
+            'is_available' => 'boolean',
+            'featured' => 'boolean',
+            'tags' => 'array',
         ];
     }
 
+    /**
+     * Category of this place.
+     *
+     * @return BelongsTo<Category, $this>
+     */
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
+    /**
+     * Schedules for this place.
+     *
+     * @return HasMany<PlaceSchedule, $this>
+     */
     public function schedules(): HasMany
     {
         return $this->hasMany(PlaceSchedule::class);
     }
 
+    /**
+     * Media assets for this place.
+     *
+     * @return HasMany<PlaceMedia, $this>
+     */
+    public function media(): HasMany
+    {
+        return $this->hasMany(PlaceMedia::class)->orderBy('display_order');
+    }
+
+    /**
+     * Accessibility features available at this place.
+     *
+     * @return BelongsToMany<AccessibilityFeature, $this>
+     */
     public function accessibilityFeatures(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -57,6 +100,9 @@ class Place extends Model
         );
     }
 
+    /**
+     * Check if place is open during the given timeframe.
+     */
     public function isOpenDuring(
         Carbon $start,
         int $durationMinutes
@@ -72,7 +118,7 @@ class Place extends Model
             $start->dayOfWeek
         );
 
-        if (!$schedule) {
+        if (! $schedule) {
             return false;
         }
 

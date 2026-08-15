@@ -11,6 +11,13 @@ class NavigationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed();
+    }
+
     /**
      * @return array<string, array{string}>
      */
@@ -49,14 +56,14 @@ class NavigationTest extends TestCase
     public function test_catalog_detail_pages_are_available(): void
     {
         $routes = [
-            ['tourist-spots.show', 'centro-de-cultura-e-memoria'],
-            ['culture.show', 'festas-e-tradicoes'],
-            ['tours.show', 'passeio-de-barco'],
-            ['guides.show', 'guia-de-natureza'],
-            ['official-itineraries.show', 'sabores-do-territorio'],
-            ['stays.show', 'pousada-centro-historico'],
-            ['dining.show', 'mercado-de-sabores-locais'],
-            ['agenda.show', 'feira-cultural'],
+            ['tourist-spots.show', 'igreja-nossa-senhora-da-guia'],
+            ['culture.show', 'centro-cultural-e-memoria-de-lucena'],
+            ['tours.show', 'passeio-ecologico-rio-miriri'],
+            ['guides.show', 'guia-joao-ribeiro-condutor'],
+            ['official-itineraries.show', '1'],
+            ['stays.show', 'pousada-dos-coqueirais-lucena'],
+            ['dining.show', 'restaurante-sabores-da-guia'],
+            ['agenda.show', 'festa-tradicional-da-guia-2026'],
         ];
 
         foreach ($routes as [$routeName, $slug]) {

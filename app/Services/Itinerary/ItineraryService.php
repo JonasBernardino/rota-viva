@@ -14,8 +14,7 @@ class ItineraryService
 {
     public function __construct(
         private readonly PlaceRepository $places,
-    ) {
-    }
+    ) {}
 
     public function generate(
         VisitorPreferencesDTO $preferences
@@ -24,11 +23,10 @@ class ItineraryService
 
         $candidates = $places
             ->filter(
-                fn (Place $place) =>
-                    $this->passesRequiredFilters(
-                        $place,
-                        $preferences
-                    )
+                fn (Place $place) => $this->passesRequiredFilters(
+                    $place,
+                    $preferences
+                )
             )
             ->map(fn (Place $place) => [
                 'place' => $place,
@@ -79,7 +77,7 @@ class ItineraryService
                 ->addMinutes($totalDuration);
 
             if (
-                !$place->isOpenDuring(
+                ! $place->isOpenDuring(
                     $expectedStart,
                     $place->duration_minutes
                 )
@@ -126,13 +124,13 @@ class ItineraryService
         Place $place,
         VisitorPreferencesDTO $preferences
     ): bool {
-        if (!$place->is_available) {
+        if (! $place->is_available) {
             return false;
         }
 
         if (
             $preferences->hasChildren === true
-            && !$place->suitable_for_children
+            && ! $place->suitable_for_children
         ) {
             return false;
         }
@@ -153,7 +151,7 @@ class ItineraryService
         }
 
         if (
-            !$this->supportsAccessibility(
+            ! $this->supportsAccessibility(
                 $place,
                 $preferences->accessibilityRequirements
             )
@@ -178,7 +176,7 @@ class ItineraryService
             ->all();
 
         foreach ($requirements as $requirement) {
-            if (!in_array($requirement, $available, true)) {
+            if (! in_array($requirement, $available, true)) {
                 return false;
             }
         }
@@ -243,7 +241,7 @@ class ItineraryService
             $score += 10;
         }
 
-        if (!$place->is_outdoor) {
+        if (! $place->is_outdoor) {
             $score += 2;
         }
 
@@ -261,7 +259,7 @@ class ItineraryService
             array_shift($stops),
         ];
 
-        while (!empty($stops)) {
+        while (! empty($stops)) {
             $current = end($ordered);
 
             $closestIndex = null;

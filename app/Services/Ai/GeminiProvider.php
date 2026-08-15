@@ -13,8 +13,7 @@ class GeminiProvider implements AiProvider
     public function __construct(
         private readonly string $apiKey,
         private readonly string $model,
-    ) {
-    }
+    ) {}
 
     public function generateStructured(
         string $systemPrompt,
@@ -60,11 +59,9 @@ class GeminiProvider implements AiProvider
                     ],
 
                     'generation_config' => [
-                        'response_mime_type' =>
-                            'application/json',
+                        'response_mime_type' => 'application/json',
 
-                        'response_json_schema' =>
-                            $schema,
+                        'response_json_schema' => $schema,
                     ],
                 ]);
 
@@ -96,7 +93,7 @@ class GeminiProvider implements AiProvider
             'candidates.0.content.parts.0.text'
         );
 
-        if (!$text) {
+        if (! $text) {
             throw new RuntimeException(
                 'Gemini não retornou conteúdo estruturado.'
             );
@@ -107,7 +104,7 @@ class GeminiProvider implements AiProvider
             true
         );
 
-        if (!is_array($decoded)) {
+        if (! is_array($decoded)) {
             throw new RuntimeException(
                 'Resposta inválida retornada pelo Gemini.'
             );

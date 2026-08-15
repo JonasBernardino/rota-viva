@@ -14,8 +14,7 @@ class VisitorPreferencesDTO
         public readonly array $accessibilityRequirements,
         public readonly ?string $intensity,
         public readonly array $missingInformation,
-    ) {
-    }
+    ) {}
 
     public static function fromArray(array $data): self
     {

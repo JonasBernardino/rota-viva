@@ -8,6 +8,5 @@ class AdaptationNarrativeDTO
         public readonly string $title,
         public readonly string $summary,
         public readonly array $changes,
-    ) {
-    }
+    ) {}
 }

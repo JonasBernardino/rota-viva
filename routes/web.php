@@ -1,9 +1,9 @@
 <?php
 
+use App\Http\Controllers\Public\AdaptationController;
 use App\Http\Controllers\Public\CatalogController;
 use App\Http\Controllers\Public\ItineraryController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Public\AdaptationController;
 
 Route::view('/', 'home')->name('home');
 
@@ -30,74 +30,24 @@ Route::view('/experiencias', 'pages.landing', [
 ])->name('experiences');
 
 $catalogs = [
-    'tourist-spots' => [
-        'uri' => 'pontos-turisticos',
-        'title' => 'Pontos turísticos',
-        'eyebrow' => 'Atrativos oficiais',
-        'description' => 'Lugares que revelam a natureza, a história e a identidade do município.',
-        'items' => ['Centro de Cultura e Memória', 'Mirante do Encontro', 'Praça da Matriz'],
-    ],
-    'culture' => [
-        'uri' => 'historia-e-cultura',
-        'title' => 'História e cultura',
-        'eyebrow' => 'Identidade territorial',
-        'description' => 'Histórias, tradições, patrimônios e vozes que mantêm viva a memória local.',
-        'items' => ['Formação do município', 'Festas e tradições', 'Vozes do Território'],
-    ],
-    'tours' => [
-        'uri' => 'passeios',
-        'title' => 'Passeios e experiências',
-        'eyebrow' => 'Atividades locais',
-        'description' => 'Passeios, oficinas e vivências organizadas por pessoas do território.',
-        'items' => ['Caminhada pelo centro histórico', 'Passeio de barco', 'Oficina de artesanato'],
-    ],
-    'guides' => [
-        'uri' => 'guias',
-        'title' => 'Guias turísticos',
-        'eyebrow' => 'Profissionais validados',
-        'description' => 'Encontre profissionais preparados para apresentar o território com responsabilidade.',
-        'items' => ['Guia de cultura e memória', 'Guia de natureza', 'Condutor de experiências locais'],
-    ],
-    'official-itineraries' => [
-        'uri' => 'roteiros-oficiais',
-        'title' => 'Roteiros oficiais',
-        'eyebrow' => 'Curadoria municipal',
-        'description' => 'Percursos prontos para conhecer diferentes aspectos da cidade.',
-        'items' => ['Entre cultura e tranquilidade', 'Sabores do território', 'Natureza e paisagens'],
-    ],
-    'stays' => [
-        'uri' => 'onde-ficar',
-        'title' => 'Onde ficar',
-        'eyebrow' => 'Hospedagens',
-        'description' => 'Hotéis, pousadas e hospedagens com informações validadas.',
-        'items' => ['Pousada Centro Histórico', 'Hospedagem da Enseada', 'Chalés da Serra'],
-    ],
-    'dining' => [
-        'uri' => 'onde-comer',
-        'title' => 'Onde comer',
-        'eyebrow' => 'Gastronomia local',
-        'description' => 'Restaurantes, mercados e produtores que expressam os sabores da cidade.',
-        'items' => ['Mercado de Sabores Locais', 'Cozinha da Praça', 'Café do Casario'],
-    ],
-    'agenda' => [
-        'uri' => 'agenda',
-        'title' => 'Agenda',
-        'eyebrow' => 'Acontece na cidade',
-        'description' => 'Eventos, festas, apresentações e atividades com data marcada.',
-        'items' => ['Feira cultural', 'Festival de sabores', 'Apresentação na praça'],
-    ],
+    'tourist-spots' => 'pontos-turisticos',
+    'culture' => 'historia-e-cultura',
+    'tours' => 'passeios',
+    'guides' => 'guias',
+    'official-itineraries' => 'roteiros-oficiais',
+    'stays' => 'onde-ficar',
+    'dining' => 'onde-comer',
+    'agenda' => 'agenda',
 ];
 
-foreach ($catalogs as $routePrefix => $catalog) {
-    Route::view('/' . $catalog['uri'], 'pages.catalog', [
-        ...$catalog,
-        'routePrefix' => $routePrefix,
-    ])->name($routePrefix . '.index');
+foreach ($catalogs as $routePrefix => $uri) {
+    Route::get('/'.$uri, [CatalogController::class, 'index'])
+        ->defaults('section', $routePrefix)
+        ->name($routePrefix.'.index');
 
-    Route::get('/' . $catalog['uri'] . '/{slug}', [CatalogController::class, 'show'])
-        ->defaults('catalog', $catalog)
-        ->defaults('routePrefix', $routePrefix)
-        ->name($routePrefix . '.show');
+    Route::get('/'.$uri.'/{slug}', [CatalogController::class, 'show'])
+        ->defaults('section', $routePrefix)
+        ->name($routePrefix.'.show');
 }
 
 Route::view('/mapa-da-cidade', 'pages.map')->name('city-map');
@@ -149,6 +99,6 @@ Route::middleware(['auth', 'can:access-admin-panel'])->prefix('gestor')->name('a
     ];
 
     foreach ($modules as $name => $title) {
-        Route::view('/' . $name, 'admin.module', compact('title'))->name($name . '.index');
+        Route::view('/'.$name, 'admin.module', compact('title'))->name($name.'.index');
     }
 });

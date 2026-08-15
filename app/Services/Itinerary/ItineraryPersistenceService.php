@@ -27,50 +27,39 @@ class ItineraryPersistenceService
                 'original_description' => $description,
                 'moods' => $preferences->moods,
                 'interests' => $preferences->interests,
-                'available_minutes' =>
-                $preferences->availableMinutes,
+                'available_minutes' => $preferences->availableMinutes,
                 'budget' => $preferences->budget,
-                'has_children' =>
-                $preferences->hasChildren,
+                'has_children' => $preferences->hasChildren,
                 'transport' => $preferences->transport,
-                'accessibility_requirements' =>
-                $preferences
+                'accessibility_requirements' => $preferences
                     ->accessibilityRequirements,
-                'intensity' =>
-                $preferences->intensity,
+                'intensity' => $preferences->intensity,
             ]);
 
             $itinerary = Itinerary::create([
-                'visitor_preference_id' =>
-                $preference->id,
+                'visitor_preference_id' => $preference->id,
 
                 'title' => $narrative->title,
                 'summary' => $narrative->summary,
 
-                'total_duration_minutes' =>
-                $generated->totalDurationMinutes,
+                'total_duration_minutes' => $generated->totalDurationMinutes,
 
-                'total_estimated_cost' =>
-                $generated->totalEstimatedCost,
+                'total_estimated_cost' => $generated->totalEstimatedCost,
 
                 'status' => 'ACTIVE',
             ]);
 
             foreach (
-                $generated->stops
-                as $position => $stop
+                $generated->stops as $position => $stop
             ) {
                 $itinerary->items()->create([
                     'place_id' => $stop->placeId,
                     'position' => $position + 1,
-                    'duration_minutes' =>
-                    $stop->durationMinutes,
+                    'duration_minutes' => $stop->durationMinutes,
 
-                    'estimated_cost' =>
-                    $stop->estimatedCost,
+                    'estimated_cost' => $stop->estimatedCost,
 
-                    'reason' =>
-                    $narrative
+                    'reason' => $narrative
                         ->reasonFor($stop->placeId),
                 ]);
             }
